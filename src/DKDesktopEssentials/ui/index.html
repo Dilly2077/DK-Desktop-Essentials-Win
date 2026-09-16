@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="color-scheme" content="dark" />
+  <meta name="color-scheme" content="dark light" />
   <title>DK Desktop Essentials</title>
   <link rel="stylesheet" href="styles.css" />
-  <script src="app.js" defer></script>
+  <link rel="stylesheet" href="refinements.css" />
+  <script src="app2.js" defer></script>
 </head>
 <body>
-  <div id="app" class="app-shell">
+  <div id="app" class="app-shell dark-mode" data-tooltips="on">
     <header class="titlebar" id="titlebar">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true"><span>D</span><span>K</span></div>
@@ -35,7 +36,6 @@
       <aside class="sidebar">
         <nav class="primary-nav" aria-label="Main navigation">
           <button class="nav-item active" data-view="command"><span class="nav-icon" data-icon="home"></span><span>Command Center</span></button>
-          <button class="nav-item" data-view="workspace"><span class="nav-icon" data-icon="grid"></span><span>Workspace</span></button>
           <button class="nav-item" data-category="Controllers"><span class="nav-icon" data-icon="gamepad"></span><span>Controllers</span></button>
           <button class="nav-item" data-category="Hardware"><span class="nav-icon" data-icon="chip"></span><span>Hardware</span></button>
           <button class="nav-item" data-category="Drivers"><span class="nav-icon" data-icon="drive"></span><span>Drivers</span></button>
@@ -44,14 +44,6 @@
           <button class="nav-item" data-category="Automation"><span class="nav-icon" data-icon="play"></span><span>Automation</span></button>
           <button class="nav-item" data-category="Privacy & Security"><span class="nav-icon" data-icon="shield"></span><span>Privacy &amp; Security</span></button>
           <button class="nav-item" data-category="Utilities"><span class="nav-icon" data-icon="wrench"></span><span>Utilities</span></button>
-        </nav>
-
-        <div class="nav-separator"></div>
-
-        <nav class="secondary-nav" aria-label="Library navigation">
-          <button class="nav-item" data-view="all"><span class="nav-icon" data-icon="tiles"></span><span>All Tools</span></button>
-          <button class="nav-item" data-view="favorites"><span class="nav-icon" data-icon="star"></span><span>Favorites</span></button>
-          <button class="nav-item" data-view="recent"><span class="nav-icon" data-icon="clock"></span><span>Recent</span></button>
         </nav>
 
         <div class="sidebar-spacer"></div>
@@ -64,7 +56,7 @@
 
         <div class="local-status-card">
           <span class="windows-mark" data-icon="windows"></span>
-          <div><strong>DK Desktop Essentials</strong><small>v0.1.0 UI Foundation</small><small class="ready"><b></b> Ready. Running locally.</small></div>
+          <div><strong>DK Desktop Essentials</strong><small>v0.1.1 UI Foundation</small><small class="ready"><b></b> Ready. Running locally.</small></div>
         </div>
       </aside>
 
