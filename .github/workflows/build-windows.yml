@@ -30,6 +30,7 @@ jobs:
         shell: pwsh
         run: |
           node --check .\src\DKDesktopEssentials\ui\app2.js
+          node --check .\src\DKDesktopEssentials\ui\workspace-rail.js
 
       - name: Restore
         shell: pwsh
