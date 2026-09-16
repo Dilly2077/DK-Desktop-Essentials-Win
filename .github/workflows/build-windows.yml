@@ -1,0 +1,56 @@
+name: Build Windows UI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Setup Node for UI syntax check
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate UI JavaScript
+        shell: pwsh
+        run: node --check .\src\DKDesktopEssentials\ui\app.js
+
+      - name: Restore
+        shell: pwsh
+        run: dotnet restore .\src\DKDesktopEssentials\DKDesktopEssentials.csproj
+
+      - name: Build
+        shell: pwsh
+        run: dotnet build .\src\DKDesktopEssentials\DKDesktopEssentials.csproj -c Release --no-restore
+
+      - name: Publish self-contained Windows x64 build
+        shell: pwsh
+        run: >-
+          dotnet publish .\src\DKDesktopEssentials\DKDesktopEssentials.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:PublishReadyToRun=false
+          -o .\artifacts\DK-Desktop-Essentials-win-x64
+
+      - name: Upload Windows build
+        uses: actions/upload-artifact@v4
+        with:
+          name: DK-Desktop-Essentials-win-x64
+          path: .\artifacts\DK-Desktop-Essentials-win-x64\
+          if-no-files-found: error
