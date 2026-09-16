@@ -1,0 +1,99 @@
+/* UI-only refinements for the simplified Command Center. */
+
+/* The default remains the approved dark navy/cyan palette. */
+.app-shell.light-mode{
+  background:
+    radial-gradient(circle at 72% 18%,rgba(0,150,215,.10),transparent 30%),
+    linear-gradient(135deg,#172633 0%,#1c3140 45%,#152531 100%);
+}
+.app-shell.light-mode .titlebar{
+  background:linear-gradient(90deg,rgba(23,39,52,.99),rgba(27,48,63,.98));
+  border-bottom-color:#365669;
+}
+.app-shell.light-mode .sidebar{
+  background:linear-gradient(180deg,rgba(20,36,48,.98),rgba(18,32,43,.96));
+  border-right-color:#35566a;
+}
+.app-shell.light-mode .right-rail{
+  background:rgba(20,34,45,.90);
+  border-left-color:#35566a;
+}
+.app-shell.light-mode .hero,
+.app-shell.light-mode .tool-card,
+.app-shell.light-mode .rail-card,
+.app-shell.light-mode .settings-section,
+.app-shell.light-mode .placeholder-panel,
+.app-shell.light-mode .about-card{
+  filter:brightness(1.12) saturate(.92);
+}
+.app-shell.light-mode .search-wrap input{
+  background:#162c3a;
+  border-color:#42a8ef;
+}
+.app-shell.light-mode .nav-item:hover{background:#173447}
+.app-shell.light-mode .nav-item.active{background:linear-gradient(90deg,#17548a,#173f63)}
+
+/* Compact view is deliberately visual only. */
+.app-shell.compact .main-pane{padding-top:10px}
+.app-shell.compact .group{margin-top:8px}
+.app-shell.compact .group-header{height:26px}
+.app-shell.compact .tool-grid{gap:6px}
+.app-shell.compact .tool-card{min-height:69px;padding-top:8px;padding-bottom:6px}
+.app-shell.compact .tool-icon{top:11px;width:31px;height:31px}
+.app-shell.compact .tool-card p{min-height:18px;margin-bottom:4px}
+.app-shell.compact .tag{padding:2px 7px}
+.app-shell.compact .hero{min-height:102px;padding-top:14px;padding-bottom:12px}
+.app-shell.compact .hero h1{font-size:32px}
+.app-shell.compact .toolbar-row{margin-top:8px;margin-bottom:8px}
+
+/* Tooltips can actually be enabled/disabled. */
+.app-shell[data-tooltips="on"] .tool-card[data-tip]::after{
+  content:attr(data-tip);
+  position:absolute;
+  left:12px;
+  bottom:calc(100% + 8px);
+  z-index:40;
+  width:max-content;
+  max-width:260px;
+  padding:7px 9px;
+  border:1px solid #31566d;
+  border-radius:6px;
+  background:#071722;
+  color:#d8e8f4;
+  font-size:10px;
+  line-height:1.3;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
+  opacity:0;
+  transform:translateY(4px);
+  pointer-events:none;
+  transition:opacity .14s ease,transform .14s ease;
+}
+.app-shell[data-tooltips="on"] .tool-card[data-tip]:hover::after{
+  opacity:1;
+  transform:translateY(0);
+}
+
+/* Expanded categories remain part of the Command Center rather than navigating away. */
+.group.expanded .tool-grid{align-items:stretch}
+.view-all[data-expand]{display:inline-flex;align-items:center;gap:4px;padding:5px 7px;border-radius:6px}
+.view-all[data-expand]:hover{background:#102b3e}
+
+/* Reduce-motion is a real interface preference. */
+.app-shell.reduce-motion *,
+.app-shell.reduce-motion *::before,
+.app-shell.reduce-motion *::after{
+  scroll-behavior:auto!important;
+  transition-duration:.001ms!important;
+  animation-duration:.001ms!important;
+  animation-iteration-count:1!important;
+}
+.app-shell.reduce-motion .tool-card:hover{transform:none}
+
+/* With the removed library/workspace sections the navigation can breathe more. */
+.sidebar .primary-nav{gap:5px}
+.sidebar-spacer{min-height:12px}
+
+@media (max-width:1180px){
+  .body-grid{grid-template-columns:210px minmax(0,1fr) 270px}
+  .tool-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
