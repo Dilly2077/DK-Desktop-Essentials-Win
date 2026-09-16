@@ -28,7 +28,8 @@ jobs:
 
       - name: Validate UI JavaScript
         shell: pwsh
-        run: node --check .\src\DKDesktopEssentials\ui\app.js
+        run: |
+          node --check .\src\DKDesktopEssentials\ui\app2.js
 
       - name: Restore
         shell: pwsh
