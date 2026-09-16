@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <title>DK Desktop Essentials</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="titlebar" id="titlebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><span>D</span><span>K</span></div>
+        <div class="brand-copy">
+          <strong>DK Desktop Essentials</strong>
+          <span>Your PC. Your Tools. Your Control.</span>
+        </div>
+      </div>
+
+      <div class="privacy-strip" aria-label="Privacy status">
+        <span class="shield-dot" data-icon="shield"></span>
+        <span>Local</span><i></i><span>Private</span><i></i><span>No Account Required</span>
+      </div>
+
+      <div class="window-controls" aria-label="Window controls">
+        <button type="button" data-window="minimize" aria-label="Minimize"><span>—</span></button>
+        <button type="button" data-window="maximize" aria-label="Maximize"><span>□</span></button>
+        <button type="button" data-window="close" aria-label="Close"><span>×</span></button>
+      </div>
+    </header>
+
+    <div class="body-grid">
+      <aside class="sidebar">
+        <nav class="primary-nav" aria-label="Main navigation">
+          <button class="nav-item active" data-view="command"><span class="nav-icon" data-icon="home"></span><span>Command Center</span></button>
+          <button class="nav-item" data-view="workspace"><span class="nav-icon" data-icon="grid"></span><span>Workspace</span></button>
+          <button class="nav-item" data-category="Controllers"><span class="nav-icon" data-icon="gamepad"></span><span>Controllers</span></button>
+          <button class="nav-item" data-category="Hardware"><span class="nav-icon" data-icon="chip"></span><span>Hardware</span></button>
+          <button class="nav-item" data-category="Drivers"><span class="nav-icon" data-icon="drive"></span><span>Drivers</span></button>
+          <button class="nav-item" data-category="Network"><span class="nav-icon" data-icon="globe"></span><span>Network</span></button>
+          <button class="nav-item" data-category="Files & Media"><span class="nav-icon" data-icon="folder"></span><span>Files &amp; Media</span></button>
+          <button class="nav-item" data-category="Automation"><span class="nav-icon" data-icon="play"></span><span>Automation</span></button>
+          <button class="nav-item" data-category="Privacy & Security"><span class="nav-icon" data-icon="shield"></span><span>Privacy &amp; Security</span></button>
+          <button class="nav-item" data-category="Utilities"><span class="nav-icon" data-icon="wrench"></span><span>Utilities</span></button>
+        </nav>
+
+        <div class="nav-separator"></div>
+
+        <nav class="secondary-nav" aria-label="Library navigation">
+          <button class="nav-item" data-view="all"><span class="nav-icon" data-icon="tiles"></span><span>All Tools</span></button>
+          <button class="nav-item" data-view="favorites"><span class="nav-icon" data-icon="star"></span><span>Favorites</span></button>
+          <button class="nav-item" data-view="recent"><span class="nav-icon" data-icon="clock"></span><span>Recent</span></button>
+        </nav>
+
+        <div class="sidebar-spacer"></div>
+        <div class="nav-separator"></div>
+
+        <nav class="secondary-nav" aria-label="Application navigation">
+          <button class="nav-item" data-view="settings"><span class="nav-icon" data-icon="settings"></span><span>Settings</span></button>
+          <button class="nav-item" data-view="about"><span class="nav-icon" data-icon="info"></span><span>About</span></button>
+        </nav>
+
+        <div class="local-status-card">
+          <span class="windows-mark" data-icon="windows"></span>
+          <div><strong>DK Desktop Essentials</strong><small>v0.1.0 UI Foundation</small><small class="ready"><b></b> Ready. Running locally.</small></div>
+        </div>
+      </aside>
+
+      <main class="main-pane" id="main-pane" tabindex="-1"></main>
+      <aside class="right-rail" id="right-rail"></aside>
+    </div>
+
+    <div id="toast-region" class="toast-region" aria-live="polite"></div>
+  </div>
+</body>
+</html>
