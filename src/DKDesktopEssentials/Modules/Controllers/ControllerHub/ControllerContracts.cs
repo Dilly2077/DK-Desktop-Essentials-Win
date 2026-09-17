@@ -44,18 +44,23 @@ public enum ControllerControlKind
     Standard,
     RawButton,
     RawAxis,
-    RawSwitch
+    RawSwitch,
+    Advanced
 }
 
 public sealed record ControllerControlRef
 {
     public ControllerControlKind Kind { get; init; } = ControllerControlKind.Standard;
     public StandardControl? Standard { get; init; }
+    public ControllerAdvancedControl? Advanced { get; init; }
     public int Index { get; init; } = -1;
 
-    public string StableKey => Kind == ControllerControlKind.Standard
-        ? $"std:{Standard}"
-        : $"{Kind.ToString().ToLowerInvariant()}:{Index}";
+    public string StableKey => Kind switch
+    {
+        ControllerControlKind.Standard => $"std:{Standard}",
+        ControllerControlKind.Advanced => $"advanced:{Advanced}",
+        _ => $"{Kind.ToString().ToLowerInvariant()}:{Index}"
+    };
 
     public static ControllerControlRef ForStandard(StandardControl control) => new()
     {
@@ -79,6 +84,12 @@ public sealed record ControllerControlRef
     {
         Kind = ControllerControlKind.RawSwitch,
         Index = index
+    };
+
+    public static ControllerControlRef ForAdvanced(ControllerAdvancedControl control) => new()
+    {
+        Kind = ControllerControlKind.Advanced,
+        Advanced = control
     };
 }
 
@@ -109,7 +120,8 @@ public sealed class ControllerSnapshot
         IReadOnlyDictionary<StandardControl, double>? standardControls,
         bool[]? rawButtons,
         double[]? rawAxes,
-        int[]? rawSwitches)
+        int[]? rawSwitches,
+        ControllerAdvancedState? advancedState = null)
     {
         DeviceId = deviceId;
         Timestamp = timestamp;
@@ -119,6 +131,7 @@ public sealed class ControllerSnapshot
         RawButtons = rawButtons ?? Array.Empty<bool>();
         RawAxes = rawAxes ?? Array.Empty<double>();
         RawSwitches = rawSwitches ?? Array.Empty<int>();
+        AdvancedState = advancedState ?? ControllerAdvancedState.Empty;
     }
 
     public string DeviceId { get; }
@@ -127,6 +140,16 @@ public sealed class ControllerSnapshot
     public bool[] RawButtons { get; }
     public double[] RawAxes { get; }
     public int[] RawSwitches { get; }
+    public ControllerAdvancedState AdvancedState { get; }
+
+    public ControllerSnapshot WithAdvancedState(ControllerAdvancedState advancedState) => new(
+        DeviceId,
+        Timestamp,
+        StandardControls,
+        RawButtons,
+        RawAxes,
+        RawSwitches,
+        advancedState);
 
     public double GetValue(ControllerControlRef control)
     {
@@ -140,6 +163,8 @@ public sealed class ControllerSnapshot
                 RawAxes[control.Index],
             ControllerControlKind.RawSwitch when control.Index >= 0 && control.Index < RawSwitches.Length =>
                 RawSwitches[control.Index],
+            ControllerControlKind.Advanced when control.Advanced is not null =>
+                AdvancedState.GetValue(control.Advanced.Value),
             _ => 0d
         };
     }
