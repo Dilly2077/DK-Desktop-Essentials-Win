@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -20,7 +21,11 @@ public sealed class ControllerHubWebBridge
 
     public async Task<string?> HandleAsync(string message, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(message) || message[0] != '{')
+        if (string.IsNullOrWhiteSpace(message))
+            return null;
+
+        message = message.TrimStart();
+        if (message.Length == 0 || message[0] != '{')
             return null;
 
         JsonDocument document;
@@ -50,7 +55,7 @@ public sealed class ControllerHubWebBridge
                 var result = await ExecuteAsync(command, payload, cancellationToken);
                 return SerializeResponse(command, requestId, true, result, null);
             }
-            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or InvalidDataException or FileNotFoundException or JsonException)
+            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or InvalidDataException or IOException or JsonException)
             {
                 return SerializeResponse(command, requestId, false, null, ex.Message);
             }
@@ -229,8 +234,13 @@ public sealed class ControllerHubWebBridge
 
     private static Guid? ReadOptionalGuid(JsonElement payload, string propertyName)
     {
-        var text = ReadOptionalString(payload, propertyName);
-        return Guid.TryParse(text, out var value) ? value : null;
+        if (payload.ValueKind != JsonValueKind.Object || !payload.TryGetProperty(propertyName, out var value) || value.ValueKind == JsonValueKind.Null)
+            return null;
+
+        if (value.ValueKind != JsonValueKind.String || !Guid.TryParse(value.GetString(), out var parsed))
+            throw new ArgumentException($"'{propertyName}' must be a valid GUID or null.");
+
+        return parsed;
     }
 
     private static bool ReadBoolean(JsonElement payload, string propertyName)
