@@ -1,6 +1,6 @@
 # Controller Hub / Remapping
 
-Status: **Slices 1-2 implemented; not yet integrated into the visible controller UI**.
+Status: **Slices 1-3 implemented; not yet integrated into the visible controller UI**.
 
 This module is the shared input/remapping engine for DK Desktop Essentials. It remains separated from the visible UI while each controller slice is built and tested.
 
@@ -37,6 +37,23 @@ This module is the shared input/remapping engine for DK Desktop Essentials. It r
 - The bridge also exposes profile list/create/duplicate/delete/import/export/validate and controller preference operations.
 - The bridge is wired into the native host, but no visible Controller Hub page has been added yet.
 
+## Slice 3 - Advanced mapping engine
+
+- Backward-compatible advanced profile fields; Slice 1/2 profiles continue to load without a schema migration.
+- Nested shift layers through `RequiredLayerIds` and `BlockedLayerIds`.
+- Tap mappings with delayed single-tap resolution so a potential double press can be distinguished.
+- Hold mappings with configurable hold thresholds.
+- Double-press mappings with configurable timing windows.
+- Tap/hold/double-press behaviours can still be combined with direct, toggle or turbo binding modes.
+- Analog value zones for trigger-style staged actions (for example soft pull vs full pull).
+- True paired 2D stick-to-stick transforms with radial deadzone, outer deadzone, curve, scale, rotation and per-axis inversion.
+- Directional/radial stick sectors that map stick angle to controller or macro actions.
+- Optional source suppression for stick and radial mappings.
+- Mapping conflict analysis for missing layer dependencies, dependency cycles, overlapping value zones, overlapping radial sectors, competing bindings and competing stick targets.
+- Advanced validation bounds timing values, stick transforms, zone ranges, radial sectors and targets before profiles are saved/imported.
+- `controllerHub:validateProfile` now returns both validation errors and conflicts.
+- New `controllerHub:analyzeProfile` bridge command returns the conflict-analysis result without saving the profile.
+
 ### WebView bridge protocol
 
 The local UI can post JSON objects/JSON strings with a `type` beginning `controllerHub:` and an optional `requestId`. Responses are returned as `controllerHub:response` with the same request ID, an `ok` flag, `result`, and an error string when applicable.
@@ -52,6 +69,7 @@ Commands currently available:
 - `controllerHub:exportProfile`
 - `controllerHub:importProfile`
 - `controllerHub:validateProfile`
+- `controllerHub:analyzeProfile`
 - `controllerHub:getPreferences`
 - `controllerHub:setDeviceName`
 - `controllerHub:setDefaultDevice`
@@ -59,7 +77,6 @@ Commands currently available:
 
 ## Not implemented yet
 
-- Advanced mapping behaviours planned for Slice 3 (tap/hold/double-press, richer directional zones, radial-menu model and conflict detection).
 - Virtual Xbox/PlayStation device creation (Slice 4). `NoOutputSink` remains the only shipped sink.
 - Physical-controller hiding/exclusive mode.
 - Gyro, touchpad, adaptive-trigger or controller-specific haptics (Slice 5).
@@ -82,4 +99,4 @@ The implementation performs no DK network requests and requires no account. Devi
 
 ## Next controller-hub slice
 
-Slice 3: Advanced Mapping Engine.
+Slice 4: Virtual Controller Output.

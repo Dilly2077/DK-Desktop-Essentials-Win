@@ -240,6 +240,7 @@ public sealed class ControllerProfileStore
             }
         }
 
-        return errors;
+        errors.AddRange(AdvancedMappingValidator.CollectErrors(profile));
+        return errors.Distinct(StringComparer.Ordinal).ToList();
     }
 }

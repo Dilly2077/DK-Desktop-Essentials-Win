@@ -82,7 +82,11 @@ public sealed class ControllerLayer
     public bool IsBaseLayer { get; set; }
     public LayerActivationMode ActivationMode { get; set; } = LayerActivationMode.Held;
     public ControllerChord? Activation { get; set; }
+    public List<string> RequiredLayerIds { get; set; } = new();
+    public List<string> BlockedLayerIds { get; set; } = new();
     public List<ControllerBinding> Bindings { get; set; } = new();
+    public List<ControllerStickMapping> StickMappings { get; set; } = new();
+    public List<ControllerRadialMapping> RadialMappings { get; set; } = new();
 
     public static ControllerLayer CreateBaseLayer() => new()
     {
@@ -106,12 +110,17 @@ public sealed class ControllerBinding
     public ControllerControlRef Source { get; set; } = ControllerControlRef.ForStandard(StandardControl.South);
     public ControllerAction Target { get; set; } = new();
     public ControllerBindingMode Mode { get; set; } = ControllerBindingMode.Direct;
+    public ControllerPressBehavior PressBehavior { get; set; } = ControllerPressBehavior.Immediate;
     public bool SuppressOriginal { get; set; } = true;
     public double ActivationThreshold { get; set; } = 0.5d;
     public double Scale { get; set; } = 1d;
     public bool Invert { get; set; }
     public double TurboHz { get; set; } = 10d;
+    public int TapMaxMilliseconds { get; set; } = 220;
+    public int HoldMilliseconds { get; set; } = 350;
+    public int DoublePressWindowMilliseconds { get; set; } = 280;
     public ControllerChord? RequiredChord { get; set; }
+    public List<ControllerValueZone> ValueZones { get; set; } = new();
 }
 
 public sealed class ControllerAction

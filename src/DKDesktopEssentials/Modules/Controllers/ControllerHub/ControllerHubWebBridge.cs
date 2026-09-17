@@ -150,12 +150,18 @@ public sealed class ControllerHubWebBridge
 
             case "controllerHub:validateProfile":
             {
-                if (payload.ValueKind != JsonValueKind.Object || !payload.TryGetProperty("profile", out var profileElement))
-                    throw new ArgumentException("A profile payload is required.");
+                var profile = ReadProfile(payload);
+                return new
+                {
+                    errors = _service.GetProfileValidationErrors(profile),
+                    conflicts = ControllerMappingAnalyzer.Analyze(profile)
+                };
+            }
 
-                var profile = JsonSerializer.Deserialize<ControllerProfile>(profileElement.GetRawText(), _jsonOptions)
-                    ?? throw new ArgumentException("The profile payload could not be read.");
-                return new { errors = _service.GetProfileValidationErrors(profile) };
+            case "controllerHub:analyzeProfile":
+            {
+                var profile = ReadProfile(payload);
+                return new { conflicts = ControllerMappingAnalyzer.Analyze(profile) };
             }
 
             case "controllerHub:getPreferences":
@@ -187,6 +193,15 @@ public sealed class ControllerHubWebBridge
             default:
                 throw new ArgumentException($"Unknown Controller Hub command '{command}'.");
         }
+    }
+
+    private ControllerProfile ReadProfile(JsonElement payload)
+    {
+        if (payload.ValueKind != JsonValueKind.Object || !payload.TryGetProperty("profile", out var profileElement))
+            throw new ArgumentException("A profile payload is required.");
+
+        return JsonSerializer.Deserialize<ControllerProfile>(profileElement.GetRawText(), _jsonOptions)
+            ?? throw new ArgumentException("The profile payload could not be read.");
     }
 
     private string SerializeResponse(
