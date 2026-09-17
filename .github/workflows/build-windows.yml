@@ -36,19 +36,25 @@ jobs:
         shell: pwsh
         run: |
           node --check .\src\DKDesktopEssentials\ui\app2.js
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --check .\src\DKDesktopEssentials\ui\workspace-rail.js
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Restore
+      - name: Restore main app
         shell: pwsh
-        run: |
-          dotnet restore .\src\DKDesktopEssentials\DKDesktopEssentials.csproj
-          dotnet restore .\src\DKControllerOutputHost\DKControllerOutputHost.csproj
+        run: dotnet restore .\src\DKDesktopEssentials\DKDesktopEssentials.csproj
 
-      - name: Build
+      - name: Restore controller output host
         shell: pwsh
-        run: |
-          dotnet build .\src\DKDesktopEssentials\DKDesktopEssentials.csproj -c Release --no-restore
-          dotnet build .\src\DKControllerOutputHost\DKControllerOutputHost.csproj -c Release --no-restore
+        run: dotnet restore .\src\DKControllerOutputHost\DKControllerOutputHost.csproj
+
+      - name: Build main app
+        shell: pwsh
+        run: dotnet build .\src\DKDesktopEssentials\DKDesktopEssentials.csproj -c Release --no-restore
+
+      - name: Build controller output host
+        shell: pwsh
+        run: dotnet build .\src\DKControllerOutputHost\DKControllerOutputHost.csproj -c Release --no-restore
 
       - name: Publish controller output host
         shell: pwsh
