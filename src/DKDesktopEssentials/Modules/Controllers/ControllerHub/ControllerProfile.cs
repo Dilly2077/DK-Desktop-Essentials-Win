@@ -28,6 +28,7 @@ public sealed class ControllerProfile
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = "Default Controller Profile";
     public ControllerDeviceMatch DeviceMatch { get; set; } = new();
+    public string? AdvancedDeviceId { get; set; }
     public ControllerOutputMode OutputMode { get; set; } = ControllerOutputMode.None;
     public bool PassThroughUnmappedControls { get; set; } = true;
     public List<ControlTuning> Tuning { get; set; } = new();
