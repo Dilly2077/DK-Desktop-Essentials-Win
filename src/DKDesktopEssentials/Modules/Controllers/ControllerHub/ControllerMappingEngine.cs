@@ -436,7 +436,7 @@ public sealed class ControllerMappingEngine
         return source.Kind switch
         {
             ControllerControlKind.RawSwitch => Math.Abs(value) > double.Epsilon,
-            ControllerControlKind.RawAxis => Math.Abs(value) >= threshold,
+            ControllerControlKind.RawAxis or ControllerControlKind.Advanced => Math.Abs(value) >= threshold,
             ControllerControlKind.Standard when source.Standard is not null && IsAnalog(source.Standard.Value) =>
                 Math.Abs(value) >= threshold,
             _ => value >= threshold
@@ -450,7 +450,7 @@ public sealed class ControllerMappingEngine
         bool sourcePressed)
     {
         var targetIsAnalog = IsAnalog(target);
-        var sourceIsAnalog = source.Kind == ControllerControlKind.RawAxis ||
+        var sourceIsAnalog = source.Kind is ControllerControlKind.RawAxis or ControllerControlKind.Advanced ||
             (source.Kind == ControllerControlKind.Standard &&
              source.Standard is not null &&
              IsAnalog(source.Standard.Value));
