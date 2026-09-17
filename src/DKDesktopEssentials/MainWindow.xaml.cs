@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Windows;
+using DKDesktopEssentials.Modules.Controllers.ControllerHub;
 using Microsoft.Web.WebView2.Core;
 
 namespace DKDesktopEssentials;
@@ -8,11 +9,17 @@ namespace DKDesktopEssentials;
 public partial class MainWindow : Window
 {
     private const string AppHost = "dk.local";
+    private readonly ControllerHubService _controllerHubService;
+    private readonly ControllerHubWebBridge _controllerHubBridge;
 
     public MainWindow()
     {
+        _controllerHubService = new ControllerHubService();
+        _controllerHubBridge = new ControllerHubWebBridge(_controllerHubService);
+
         InitializeComponent();
         Loaded += OnLoaded;
+        Closed += OnClosed;
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -92,9 +99,24 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
+    private async void OnWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
     {
-        var message = e.TryGetWebMessageAsString();
+        string message;
+        try
+        {
+            message = e.TryGetWebMessageAsString();
+        }
+        catch (ArgumentException)
+        {
+            message = e.WebMessageAsJson;
+        }
+
+        var controllerResponse = await _controllerHubBridge.HandleAsync(message);
+        if (controllerResponse is not null)
+        {
+            WebView.CoreWebView2.PostWebMessageAsJson(controllerResponse);
+            return;
+        }
 
         switch (message)
         {
@@ -125,5 +147,10 @@ public partial class MainWindow : Window
                 }
                 break;
         }
+    }
+
+    private async void OnClosed(object? sender, EventArgs e)
+    {
+        await _controllerHubService.DisposeAsync();
     }
 }
