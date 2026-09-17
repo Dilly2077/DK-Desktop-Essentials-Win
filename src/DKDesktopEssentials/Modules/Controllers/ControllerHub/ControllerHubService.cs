@@ -7,6 +7,8 @@ public sealed partial class ControllerHubService : IAsyncDisposable
     private readonly ControllerProfileStore _profileStore;
     private readonly ControllerHubPreferencesStore _preferencesStore;
     private readonly HidMaestroPackageManager _outputPackageManager;
+    private readonly Sdl3PackageManager _advancedPackageManager;
+    private IControllerAdvancedFeatureProvider _advancedProvider;
     private IControllerOutputSink _outputSink;
     private bool _disposed;
 
@@ -16,7 +18,9 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         ControllerProfileStore? profileStore = null,
         ControllerHubPreferencesStore? preferencesStore = null,
         IControllerOutputSink? outputSink = null,
-        HidMaestroPackageManager? outputPackageManager = null)
+        HidMaestroPackageManager? outputPackageManager = null,
+        Sdl3PackageManager? advancedPackageManager = null,
+        IControllerAdvancedFeatureProvider? advancedProvider = null)
     {
         _provider = provider ?? new WindowsGamingInputControllerProvider();
         _mappingEngine = mappingEngine ?? new ControllerMappingEngine();
@@ -24,6 +28,8 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         _preferencesStore = preferencesStore ?? new ControllerHubPreferencesStore();
         _outputSink = outputSink ?? new NoOutputSink();
         _outputPackageManager = outputPackageManager ?? new HidMaestroPackageManager();
+        _advancedPackageManager = advancedPackageManager ?? new Sdl3PackageManager();
+        _advancedProvider = advancedProvider ?? new Sdl3AdvancedControllerProvider(_advancedPackageManager);
 
         _provider.DeviceAdded += OnDeviceAdded;
         _provider.DeviceRemoved += OnDeviceRemoved;
@@ -48,6 +54,13 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         if (!_provider.TryRead(deviceId, out var snapshot) || snapshot is null)
             return false;
 
+        if (!string.IsNullOrWhiteSpace(profile.AdvancedDeviceId) &&
+            _advancedProvider.TryReadState(profile.AdvancedDeviceId, out var advancedState) &&
+            advancedState is not null)
+        {
+            snapshot = snapshot.WithAdvancedState(advancedState);
+        }
+
         mappedState = _mappingEngine.Map(snapshot, profile, DateTimeOffset.UtcNow);
         return true;
     }
@@ -68,6 +81,90 @@ public sealed partial class ControllerHubService : IAsyncDisposable
 
         await _outputSink.SendAsync(state, cancellationToken);
         return true;
+    }
+
+    public ControllerFeatureBackendStatus GetAdvancedFeatureBackendStatus()
+    {
+        if (_advancedProvider is Sdl3AdvancedControllerProvider sdl)
+            return sdl.GetStatus();
+
+        return new ControllerFeatureBackendStatus(
+            _advancedProvider.GetType().Name,
+            "custom",
+            Installed: _advancedProvider.IsAvailable,
+            Loaded: _advancedProvider.IsAvailable,
+            Source: "custom provider",
+            PackageSha256: string.Empty,
+            Message: _advancedProvider.LastError);
+    }
+
+    public async Task<ControllerFeatureBackendStatus> InstallAdvancedFeatureBackendAsync(CancellationToken cancellationToken = default)
+    {
+        var status = await _advancedPackageManager.InstallAsync(cancellationToken);
+        _advancedProvider.Dispose();
+        _advancedProvider = new Sdl3AdvancedControllerProvider(_advancedPackageManager);
+        _ = _advancedProvider.IsAvailable;
+        return GetAdvancedFeatureBackendStatus() with { Message = status.Message ?? _advancedProvider.LastError };
+    }
+
+    public async Task RemoveAdvancedFeatureBackendAsync(CancellationToken cancellationToken = default)
+    {
+        _advancedProvider.Dispose();
+        await _advancedPackageManager.RemoveAsync(cancellationToken);
+        _advancedProvider = new Sdl3AdvancedControllerProvider(_advancedPackageManager);
+    }
+
+    public IReadOnlyList<ControllerAdvancedDeviceDescriptor> GetAdvancedFeatureDevices() =>
+        _advancedProvider.GetDevices();
+
+    public bool TryReadAdvancedState(string backendId, out ControllerAdvancedState? state) =>
+        _advancedProvider.TryReadState(backendId, out state);
+
+    public bool TryRumbleAdvancedDevice(string backendId, double low, double high, TimeSpan duration) =>
+        _advancedProvider.TryRumble(backendId, low, high, duration);
+
+    public bool TryRumbleAdvancedTriggers(string backendId, double left, double right, TimeSpan duration) =>
+        _advancedProvider.TryRumbleTriggers(backendId, left, right, duration);
+
+    public bool TrySetAdvancedDeviceLed(string backendId, byte red, byte green, byte blue) =>
+        _advancedProvider.TrySetLed(backendId, red, green, blue);
+
+    public bool TrySetAdvancedDevicePlayerLed(string backendId, int playerIndex) =>
+        _advancedProvider.TrySetPlayerLed(backendId, playerIndex);
+
+    public bool TrySetAdvancedAdaptiveTriggers(string backendId, ControllerAdaptiveTriggerState state) =>
+        _advancedProvider.TrySetAdaptiveTriggers(backendId, state);
+
+    public async Task<ControllerProfile> SetProfileAdvancedDeviceAsync(
+        Guid profileId,
+        string? backendId,
+        CancellationToken cancellationToken = default)
+    {
+        var profile = await _profileStore.LoadAsync(profileId, cancellationToken)
+            ?? throw new InvalidOperationException($"Controller profile '{profileId}' does not exist.");
+
+        if (!string.IsNullOrWhiteSpace(backendId))
+        {
+            var advancedDevice = _advancedProvider.GetDevices()
+                .FirstOrDefault(device => string.Equals(device.BackendId, backendId, StringComparison.Ordinal))
+                ?? throw new InvalidOperationException($"Advanced controller device '{backendId}' is not available.");
+
+            if (profile.DeviceMatch.VendorId is not null && profile.DeviceMatch.VendorId.Value != advancedDevice.VendorId)
+                throw new InvalidOperationException("The selected advanced-feature device has a different vendor ID than this profile.");
+
+            if (profile.DeviceMatch.ProductId is not null && profile.DeviceMatch.ProductId.Value != advancedDevice.ProductId)
+                throw new InvalidOperationException("The selected advanced-feature device has a different product ID than this profile.");
+
+            profile.AdvancedDeviceId = backendId;
+        }
+        else
+        {
+            profile.AdvancedDeviceId = null;
+        }
+
+        await _profileStore.SaveAsync(profile, cancellationToken);
+        _mappingEngine.ResetRuntimeState();
+        return profile;
     }
 
     public ControllerOutputBackendStatus GetOutputBackendStatus() =>
@@ -251,6 +348,7 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         _provider.DeviceAdded -= OnDeviceAdded;
         _provider.DeviceRemoved -= OnDeviceRemoved;
         await StopOutputSessionAsync();
+        _advancedProvider.Dispose();
         _provider.Dispose();
         await _outputSink.DisposeAsync();
     }

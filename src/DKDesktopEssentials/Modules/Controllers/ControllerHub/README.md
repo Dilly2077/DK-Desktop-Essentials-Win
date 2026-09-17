@@ -1,6 +1,6 @@
 # Controller Hub / Remapping
 
-Status: **Slices 1-4 implemented; not yet integrated into the visible controller UI**.
+Status: **Slices 1-5 implemented; not yet integrated into the visible controller UI**.
 
 This module is the shared input/remapping engine for DK Desktop Essentials. It remains separated from the visible UI while each controller slice is built and tested.
 
@@ -51,8 +51,8 @@ This module is the shared input/remapping engine for DK Desktop Essentials. It r
 - Optional source suppression for stick and radial mappings.
 - Mapping conflict analysis for missing layer dependencies, dependency cycles, overlapping value zones, overlapping radial sectors, competing bindings and competing stick targets.
 - Advanced validation bounds timing values, stick transforms, zone ranges, radial sectors and targets before profiles are saved/imported.
-- `controllerHub:validateProfile` now returns both validation errors and conflicts.
-- New `controllerHub:analyzeProfile` bridge command returns the conflict-analysis result without saving the profile.
+- `controllerHub:validateProfile` returns both validation errors and conflicts.
+- `controllerHub:analyzeProfile` returns the conflict-analysis result without saving the profile.
 
 ## Slice 4 - Virtual controller output
 
@@ -71,9 +71,28 @@ This module is the shared input/remapping engine for DK Desktop Essentials. It r
 - Stable HIDMaestro identity keys are derived from the DK profile ID so the virtual device identity remains consistent between sessions.
 - The Windows release workflow builds and publishes the output helper next to the main application under `controller-output-host`.
 
+## Slice 5 - Advanced controller features
+
+- Advanced physical-controller features are capability-driven through an optional SDL3 backend rather than being inferred solely from controller branding.
+- SDL3 v3.4.16 is installed only when explicitly requested from its official GitHub release; SHA-256 `4217944b4e51457af4a59c82d883f8443b3e65964b2acd8943484c492756c4b6` is verified before `SDL3.dll` is extracted.
+- Provider provenance is stored locally under `%LOCALAPPDATA%\DKDesktopEssentials\Controllers\Providers\SDL3\3.4.16\source.json`.
+- SDL3 is dynamically loaded at runtime, so the normal controller path still works when the optional advanced backend is absent.
+- Per-device capability reporting covers gyroscope, accelerometer, touchpad, body rumble, trigger rumble, RGB LED, player LED and DualSense adaptive triggers.
+- Gyroscope readings expose pitch/yaw/roll angular velocity; accelerometer readings expose X/Y/Z acceleration.
+- Touchpad state retains raw 0..1 coordinates, pressure and contact data for UI/inspection. When touch X/Y is used as a remapping source it is converted to a centred signed axis, with Y oriented like a gamepad stick and zero output when no finger is touching.
+- Advanced controls are first-class profile sources, so gyro, accelerometer and touch data can feed ordinary bindings, value zones, chords, 2D stick transforms and radial mappings.
+- Profiles explicitly store an `AdvancedDeviceId`; DK Desktop does not guess between multiple identical controllers. Vendor/product compatibility is checked before linking an advanced device to a profile.
+- Standard rumble, trigger-rumble, RGB-light and player-LED actions are exposed only when SDL reports the corresponding capability.
+- DualSense and DualSense Edge adaptive-trigger output uses SDL's device-specific effect channel with explicit Off, Resistance and Vibration modes. Calls still return failure when the active transport/driver rejects the effect.
+- Advanced feature installation/removal, device enumeration, live advanced-state reads, profile linking and hardware effects are exposed through the local WebView bridge.
+
+### Advanced-feature limitations
+
+Capability support depends on the physical controller, connection mode, Windows driver and SDL backend. DK Desktop does not claim that a feature is available merely because a controller family commonly has it. CI verifies compilation and packaging but cannot certify physical gyro, touchpad, rumble, LED or adaptive-trigger behaviour without hardware testing.
+
 ### Physical-controller hiding
 
-Physical-device hiding is deliberately **not** automated in Slice 4. The maintained HidHide source has continued development, but the latest signed public installer lags the current source and installation/update requires reboot-sensitive filter-driver changes. DK Desktop therefore does not silently add a second system driver or claim double-input prevention is universal. A vetted hiding/exclusive-mode path belongs in Slice 6 compatibility hardening.
+Physical-device hiding is deliberately **not** automated yet. The maintained HidHide source has continued development, but the latest signed public installer lags the current source and installation/update requires reboot-sensitive filter-driver changes. DK Desktop therefore does not silently add a second system driver or claim double-input prevention is universal. A vetted hiding/exclusive-mode path belongs in Slice 6 compatibility hardening.
 
 ### WebView bridge protocol
 
@@ -95,6 +114,17 @@ Commands currently available:
 - `controllerHub:setDeviceName`
 - `controllerHub:setDefaultDevice`
 - `controllerHub:setDefaultProfile`
+- `controllerHub:getAdvancedFeatureStatus`
+- `controllerHub:installAdvancedFeatures`
+- `controllerHub:removeAdvancedFeatures`
+- `controllerHub:listAdvancedDevices`
+- `controllerHub:readAdvancedState`
+- `controllerHub:setProfileAdvancedDevice`
+- `controllerHub:rumble`
+- `controllerHub:rumbleTriggers`
+- `controllerHub:setLed`
+- `controllerHub:setPlayerLed`
+- `controllerHub:setAdaptiveTriggers`
 - `controllerHub:getOutputStatus`
 - `controllerHub:installOutputProvider`
 - `controllerHub:installOutputDriver`
@@ -106,7 +136,6 @@ Commands currently available:
 ## Not implemented yet
 
 - Physical-controller hiding/exclusive mode; deferred to Slice 6 for a separately vetted driver/compatibility path.
-- Gyro, touchpad, adaptive-trigger or controller-specific haptics (Slice 5).
 - Reliability/compatibility hardening beyond the current safe defaults (Slice 6).
 - Full module test harness and completion pass (Slice 7).
 - Calibration/drift graphs and polling-rate diagnostics (separate Controller Diagnostics module).
@@ -122,8 +151,8 @@ Virtual-controller compatibility with anti-cheat-protected games must never be p
 
 ## Privacy/security
 
-The controller engine itself performs no DK telemetry and requires no account. Device state, aliases, defaults, profiles and provider metadata remain local. The only Slice 4 network request occurs when the user explicitly installs the HIDMaestro provider package; it goes directly to the pinned official GitHub release URL and is hash-verified before use.
+The controller engine performs no DK telemetry and requires no account. Device state, aliases, defaults, profiles and provider metadata remain local. Network access happens only when the user explicitly installs an optional provider package: HIDMaestro for virtual output or SDL3 for advanced physical features. Each request goes directly to a pinned official GitHub release and the downloaded package is hash-verified before use.
 
 ## Next controller-hub slice
 
-Slice 5: PlayStation / advanced controller features.
+Slice 6: Reliability, safety and compatibility hardening.
