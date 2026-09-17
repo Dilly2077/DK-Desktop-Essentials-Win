@@ -20,10 +20,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET 8
+      - name: Setup .NET 8 and 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
       - name: Setup Node for UI syntax check
         uses: actions/setup-node@v4
@@ -38,11 +40,25 @@ jobs:
 
       - name: Restore
         shell: pwsh
-        run: dotnet restore .\src\DKDesktopEssentials\DKDesktopEssentials.csproj
+        run: |
+          dotnet restore .\src\DKDesktopEssentials\DKDesktopEssentials.csproj
+          dotnet restore .\src\DKControllerOutputHost\DKControllerOutputHost.csproj
 
       - name: Build
         shell: pwsh
-        run: dotnet build .\src\DKDesktopEssentials\DKDesktopEssentials.csproj -c Release --no-restore
+        run: |
+          dotnet build .\src\DKDesktopEssentials\DKDesktopEssentials.csproj -c Release --no-restore
+          dotnet build .\src\DKControllerOutputHost\DKControllerOutputHost.csproj -c Release --no-restore
+
+      - name: Publish controller output host
+        shell: pwsh
+        run: >-
+          dotnet publish .\src\DKControllerOutputHost\DKControllerOutputHost.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:PublishReadyToRun=false
+          -o .\artifacts\controller-output-host
 
       - name: Publish self-contained Windows x64 build
         shell: pwsh
@@ -53,6 +69,12 @@ jobs:
           --self-contained true
           -p:PublishReadyToRun=false
           -o .\artifacts\DK-Desktop-Essentials-win-x64
+
+      - name: Bundle controller output host
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path .\artifacts\DK-Desktop-Essentials-win-x64\controller-output-host | Out-Null
+          Copy-Item .\artifacts\controller-output-host\* .\artifacts\DK-Desktop-Essentials-win-x64\controller-output-host\ -Recurse -Force
 
       - name: Upload Windows build
         uses: actions/upload-artifact@v4
