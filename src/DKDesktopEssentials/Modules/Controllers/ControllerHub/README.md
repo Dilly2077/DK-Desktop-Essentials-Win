@@ -1,6 +1,6 @@
 # Controller Hub / Remapping
 
-Status: **Slices 1-3 implemented; not yet integrated into the visible controller UI**.
+Status: **Slices 1-4 implemented; not yet integrated into the visible controller UI**.
 
 This module is the shared input/remapping engine for DK Desktop Essentials. It remains separated from the visible UI while each controller slice is built and tested.
 
@@ -54,6 +54,27 @@ This module is the shared input/remapping engine for DK Desktop Essentials. It r
 - `controllerHub:validateProfile` now returns both validation errors and conflicts.
 - New `controllerHub:analyzeProfile` bridge command returns the conflict-analysis result without saving the profile.
 
+## Slice 4 - Virtual controller output
+
+- Active backend: HIDMaestro, kept behind `IControllerOutputSink` and a separate helper process so it can be replaced without rewriting the mapping engine.
+- Xbox 360 output uses HIDMaestro profile `xbox-360-wired`.
+- DualShock 4 output uses HIDMaestro profile `dualshock-4-v2`.
+- The main app remains .NET 8; `DKControllerOutputHost` is a self-contained .NET 10 helper matching HIDMaestro's current SDK target.
+- HIDMaestro is loaded dynamically by the helper; DK Desktop does not compile-link or silently bundle the third-party SDK DLL.
+- Explicit provider installation downloads only the pinned official HIDMaestro v1.8.0 GitHub release and verifies SHA-256 `1e5f5019c20e4be8f922c7aa5a86ee87eb01f7aa851fe38daea14d0ce4fd8240` before extracting the SDK DLL.
+- Provider provenance is recorded locally in `source.json` under `%LOCALAPPDATA%\DKDesktopEssentials\Controllers\Providers\HIDMaestro\1.8.0`.
+- Driver installation is a separate explicit elevation step; there is no silent UAC prompt at startup.
+- Repair removes orphan virtual controllers while preserving the installed provider; removal can clean virtual devices/driver packages and optionally delete the locally cached provider DLL.
+- A native background output session continuously reads the selected physical controller, maps it through the selected profile and feeds the virtual controller at a clamped 60-1000 Hz update rate (250 Hz default).
+- Output sessions have explicit start, stop and status operations; shutdown stops the session and tears down the virtual controller.
+- The helper maps standard face/shoulder/stick/menu/view/paddle buttons, d-pad/hat, sticks and triggers into HIDMaestro's abstract gamepad state.
+- Stable HIDMaestro identity keys are derived from the DK profile ID so the virtual device identity remains consistent between sessions.
+- The Windows release workflow builds and publishes the output helper next to the main application under `controller-output-host`.
+
+### Physical-controller hiding
+
+Physical-device hiding is deliberately **not** automated in Slice 4. The maintained HidHide source has continued development, but the latest signed public installer lags the current source and installation/update requires reboot-sensitive filter-driver changes. DK Desktop therefore does not silently add a second system driver or claim double-input prevention is universal. A vetted hiding/exclusive-mode path belongs in Slice 6 compatibility hardening.
+
 ### WebView bridge protocol
 
 The local UI can post JSON objects/JSON strings with a `type` beginning `controllerHub:` and an optional `requestId`. Responses are returned as `controllerHub:response` with the same request ID, an `ok` flag, `result`, and an error string when applicable.
@@ -74,11 +95,17 @@ Commands currently available:
 - `controllerHub:setDeviceName`
 - `controllerHub:setDefaultDevice`
 - `controllerHub:setDefaultProfile`
+- `controllerHub:getOutputStatus`
+- `controllerHub:installOutputProvider`
+- `controllerHub:installOutputDriver`
+- `controllerHub:repairOutputBackend`
+- `controllerHub:removeOutputBackend`
+- `controllerHub:startOutputSession`
+- `controllerHub:stopOutputSession`
 
 ## Not implemented yet
 
-- Virtual Xbox/PlayStation device creation (Slice 4). `NoOutputSink` remains the only shipped sink.
-- Physical-controller hiding/exclusive mode.
+- Physical-controller hiding/exclusive mode; deferred to Slice 6 for a separately vetted driver/compatibility path.
 - Gyro, touchpad, adaptive-trigger or controller-specific haptics (Slice 5).
 - Reliability/compatibility hardening beyond the current safe defaults (Slice 6).
 - Full module test harness and completion pass (Slice 7).
@@ -89,14 +116,14 @@ Commands currently available:
 
 ## Virtual-output decision
 
-Do **not** silently install or depend on ViGEmBus. The upstream ViGEmBus project is retired. The module keeps output behind an interface while a maintained, signed/user-mode option or DK-owned driver path is evaluated.
+Do **not** silently install or depend on ViGEmBus. The upstream ViGEmBus project is retired. Slice 4 uses HIDMaestro v1.8.0 as an optional provider because it is active, MIT-licensed, exposes Xbox/PlayStation profiles and keeps its standard controller path in UMDF2/user mode. Provider installation remains explicit and removable.
 
-Any eventual driver installation must be explicit, show publisher/source/version, provide uninstall/recovery, and expose whether virtual output is available. Compatibility with anti-cheat-protected games must never be presented as universal.
+Virtual-controller compatibility with anti-cheat-protected games must never be presented as universal. DK Desktop does not attempt to bypass anti-cheat or conceal the fact that a virtual device is being used.
 
 ## Privacy/security
 
-The implementation performs no DK network requests and requires no account. Device state, aliases, defaults and profile data remain local. The provider uses Windows gaming-input APIs; profile files are readable JSON so users can inspect, export and back them up.
+The controller engine itself performs no DK telemetry and requires no account. Device state, aliases, defaults, profiles and provider metadata remain local. The only Slice 4 network request occurs when the user explicitly installs the HIDMaestro provider package; it goes directly to the pinned official GitHub release URL and is hash-verified before use.
 
 ## Next controller-hub slice
 
-Slice 4: Virtual Controller Output.
+Slice 5: PlayStation / advanced controller features.
