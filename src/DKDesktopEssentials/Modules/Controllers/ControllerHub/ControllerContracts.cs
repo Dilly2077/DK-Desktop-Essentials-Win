@@ -164,10 +164,29 @@ public sealed class ControllerSnapshot
             ControllerControlKind.RawSwitch when control.Index >= 0 && control.Index < RawSwitches.Length =>
                 RawSwitches[control.Index],
             ControllerControlKind.Advanced when control.Advanced is not null =>
-                AdvancedState.GetValue(control.Advanced.Value),
+                GetMappedAdvancedValue(control.Advanced.Value),
             _ => 0d
         };
     }
+
+    private double GetMappedAdvancedValue(ControllerAdvancedControl control)
+    {
+        var value = AdvancedState.GetValue(control);
+
+        return control switch
+        {
+            ControllerAdvancedControl.Touchpad0X => IsTouchActive(0) ? Math.Clamp((value * 2d) - 1d, -1d, 1d) : 0d,
+            ControllerAdvancedControl.Touchpad0Y => IsTouchActive(0) ? Math.Clamp(1d - (value * 2d), -1d, 1d) : 0d,
+            ControllerAdvancedControl.Touchpad1X => IsTouchActive(1) ? Math.Clamp((value * 2d) - 1d, -1d, 1d) : 0d,
+            ControllerAdvancedControl.Touchpad1Y => IsTouchActive(1) ? Math.Clamp(1d - (value * 2d), -1d, 1d) : 0d,
+            _ => value
+        };
+    }
+
+    private bool IsTouchActive(int slot) =>
+        AdvancedState.GetValue(slot == 0
+            ? ControllerAdvancedControl.Touchpad0Contact
+            : ControllerAdvancedControl.Touchpad1Contact) >= 0.5d;
 }
 
 public interface IControllerProvider : IDisposable
