@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -55,7 +56,7 @@ public sealed class ControllerHubWebBridge
                 var result = await ExecuteAsync(command, payload, cancellationToken);
                 return SerializeResponse(command, requestId, true, result, null);
             }
-            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or InvalidDataException or IOException or JsonException)
+            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or InvalidDataException or IOException or JsonException or Win32Exception)
             {
                 return SerializeResponse(command, requestId, false, null, ex.Message);
             }
@@ -190,6 +191,40 @@ public sealed class ControllerHubWebBridge
                 return new { deviceId, profileId };
             }
 
+            case "controllerHub:getOutputStatus":
+                return _service.GetOutputSessionStatus();
+
+            case "controllerHub:installOutputProvider":
+                return await _service.InstallOutputProviderPackageAsync(cancellationToken);
+
+            case "controllerHub:installOutputDriver":
+                await _service.InstallOutputDriverAsync(cancellationToken);
+                return _service.GetOutputSessionStatus();
+
+            case "controllerHub:repairOutputBackend":
+                await _service.RepairOutputBackendAsync(cancellationToken);
+                return _service.GetOutputSessionStatus();
+
+            case "controllerHub:removeOutputBackend":
+            {
+                var removePackage = ReadBoolean(payload, "removeProviderPackage");
+                await _service.RemoveOutputBackendAsync(removePackage, cancellationToken);
+                return _service.GetOutputSessionStatus();
+            }
+
+            case "controllerHub:startOutputSession":
+            {
+                var deviceId = RequireString(payload, "deviceId");
+                var profileId = RequireGuid(payload, "profileId");
+                var updateHz = ReadInt32(payload, "updateHz") ?? 250;
+                await _service.StartOutputSessionAsync(deviceId, profileId, updateHz, cancellationToken);
+                return _service.GetOutputSessionStatus();
+            }
+
+            case "controllerHub:stopOutputSession":
+                await _service.StopOutputSessionAsync();
+                return _service.GetOutputSessionStatus();
+
             default:
                 throw new ArgumentException($"Unknown Controller Hub command '{command}'.");
         }
@@ -264,5 +299,16 @@ public sealed class ControllerHubWebBridge
             return false;
 
         return value.ValueKind == JsonValueKind.True;
+    }
+
+    private static int? ReadInt32(JsonElement payload, string propertyName)
+    {
+        if (payload.ValueKind != JsonValueKind.Object || !payload.TryGetProperty(propertyName, out var value) || value.ValueKind == JsonValueKind.Null)
+            return null;
+
+        if (value.ValueKind != JsonValueKind.Number || !value.TryGetInt32(out var parsed))
+            throw new ArgumentException($"'{propertyName}' must be an integer.");
+
+        return parsed;
     }
 }
