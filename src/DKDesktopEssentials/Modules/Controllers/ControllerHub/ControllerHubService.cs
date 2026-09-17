@@ -1,6 +1,6 @@
 namespace DKDesktopEssentials.Modules.Controllers.ControllerHub;
 
-public sealed class ControllerHubService : IAsyncDisposable
+public sealed partial class ControllerHubService : IAsyncDisposable
 {
     private readonly IControllerProvider _provider;
     private readonly ControllerMappingEngine _mappingEngine;
@@ -84,7 +84,7 @@ public sealed class ControllerHubService : IAsyncDisposable
 
     public async Task RemoveOutputBackendAsync(bool removeProviderPackage, CancellationToken cancellationToken = default)
     {
-        await DisableVirtualOutputAsync();
+        await StopOutputSessionAsync();
         await _outputPackageManager.RemoveDriverAsync(cancellationToken);
         if (removeProviderPackage)
             await _outputPackageManager.RemoveProviderPackageAsync(cancellationToken);
@@ -250,6 +250,7 @@ public sealed class ControllerHubService : IAsyncDisposable
         _disposed = true;
         _provider.DeviceAdded -= OnDeviceAdded;
         _provider.DeviceRemoved -= OnDeviceRemoved;
+        await StopOutputSessionAsync();
         _provider.Dispose();
         await _outputSink.DisposeAsync();
     }
