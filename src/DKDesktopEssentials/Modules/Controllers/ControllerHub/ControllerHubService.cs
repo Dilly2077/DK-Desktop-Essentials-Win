@@ -6,6 +6,7 @@ public sealed class ControllerHubService : IAsyncDisposable
     private readonly ControllerMappingEngine _mappingEngine;
     private readonly ControllerProfileStore _profileStore;
     private readonly ControllerHubPreferencesStore _preferencesStore;
+    private readonly HidMaestroPackageManager _outputPackageManager;
     private IControllerOutputSink _outputSink;
     private bool _disposed;
 
@@ -14,13 +15,15 @@ public sealed class ControllerHubService : IAsyncDisposable
         ControllerMappingEngine? mappingEngine = null,
         ControllerProfileStore? profileStore = null,
         ControllerHubPreferencesStore? preferencesStore = null,
-        IControllerOutputSink? outputSink = null)
+        IControllerOutputSink? outputSink = null,
+        HidMaestroPackageManager? outputPackageManager = null)
     {
         _provider = provider ?? new WindowsGamingInputControllerProvider();
         _mappingEngine = mappingEngine ?? new ControllerMappingEngine();
         _profileStore = profileStore ?? new ControllerProfileStore();
         _preferencesStore = preferencesStore ?? new ControllerHubPreferencesStore();
         _outputSink = outputSink ?? new NoOutputSink();
+        _outputPackageManager = outputPackageManager ?? new HidMaestroPackageManager();
 
         _provider.DeviceAdded += OnDeviceAdded;
         _provider.DeviceRemoved += OnDeviceRemoved;
@@ -66,6 +69,60 @@ public sealed class ControllerHubService : IAsyncDisposable
         await _outputSink.SendAsync(state, cancellationToken);
         return true;
     }
+
+    public ControllerOutputBackendStatus GetOutputBackendStatus() =>
+        _outputPackageManager.GetStatus();
+
+    public Task<ControllerOutputBackendStatus> InstallOutputProviderPackageAsync(CancellationToken cancellationToken = default) =>
+        _outputPackageManager.InstallProviderPackageAsync(cancellationToken);
+
+    public Task InstallOutputDriverAsync(CancellationToken cancellationToken = default) =>
+        _outputPackageManager.InstallDriverAsync(cancellationToken);
+
+    public Task RepairOutputBackendAsync(CancellationToken cancellationToken = default) =>
+        _outputPackageManager.RepairAsync(cancellationToken);
+
+    public async Task RemoveOutputBackendAsync(bool removeProviderPackage, CancellationToken cancellationToken = default)
+    {
+        await DisableVirtualOutputAsync();
+        await _outputPackageManager.RemoveDriverAsync(cancellationToken);
+        if (removeProviderPackage)
+            await _outputPackageManager.RemoveProviderPackageAsync(cancellationToken);
+    }
+
+    public async Task EnableVirtualOutputAsync(
+        ControllerOutputMode mode,
+        string? identityKey = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (mode is not ControllerOutputMode.VirtualXbox360 and not ControllerOutputMode.VirtualDualShock4)
+            throw new ArgumentOutOfRangeException(nameof(mode), mode, "Select Xbox 360 or DualShock 4 virtual output.");
+
+        var key = string.IsNullOrWhiteSpace(identityKey)
+            ? "dk-desktop-essentials:primary"
+            : identityKey.Trim();
+
+        var sink = await HidMaestroOutputSink.CreateAsync(mode, _outputPackageManager, key, cancellationToken);
+        try
+        {
+            await SetOutputSinkAsync(sink);
+        }
+        catch
+        {
+            await sink.DisposeAsync();
+            throw;
+        }
+    }
+
+    public ValueTask DisableVirtualOutputAsync() =>
+        SetOutputSinkAsync(new NoOutputSink());
+
+    public object GetActiveOutputStatus() => new
+    {
+        name = _outputSink.Name,
+        available = _outputSink.IsAvailable,
+        isVirtual = _outputSink is HidMaestroOutputSink
+    };
 
     public async Task<ControllerProfile> CreateProfileAsync(
         string? deviceId = null,
