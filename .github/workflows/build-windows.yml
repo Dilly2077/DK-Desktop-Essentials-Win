@@ -2,6 +2,10 @@ name: Build Windows UI
 
 on:
   push:
+    branches:
+      - main
+      - "module/**"
+  pull_request:
     branches: [main]
   workflow_dispatch:
 
