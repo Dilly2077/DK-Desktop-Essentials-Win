@@ -114,5 +114,6 @@ public interface IControllerAdvancedFeatureProvider : IDisposable
     bool TryRumble(string backendId, double lowFrequency, double highFrequency, TimeSpan duration);
     bool TryRumbleTriggers(string backendId, double left, double right, TimeSpan duration);
     bool TrySetLed(string backendId, byte red, byte green, byte blue);
+    bool TrySetPlayerLed(string backendId, int playerIndex);
     bool TrySetAdaptiveTriggers(string backendId, ControllerAdaptiveTriggerState state);
 }
