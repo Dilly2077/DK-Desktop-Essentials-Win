@@ -241,6 +241,7 @@ public sealed class ControllerProfileStore
         }
 
         errors.AddRange(AdvancedMappingValidator.CollectErrors(profile));
+        errors.AddRange(ControllerAdvancedMapping.Validate(profile.AdvancedMappings));
         return errors.Distinct(StringComparer.Ordinal).ToList();
     }
 }
