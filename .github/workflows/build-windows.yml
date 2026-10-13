@@ -56,10 +56,6 @@ jobs:
         shell: pwsh
         run: dotnet build .\src\DKControllerOutputHost\DKControllerOutputHost.csproj -c Release --no-restore
 
-      - name: Controller reliability regression tests
-        shell: pwsh
-        run: dotnet run --project .\tests\ControllerReliability.Tests\ControllerReliability.Tests.csproj -c Release
-
       - name: Publish controller output host
         shell: pwsh
         run: >-
@@ -69,6 +65,18 @@ jobs:
           --self-contained true
           -p:PublishReadyToRun=false
           -o .\artifacts\controller-output-host
+
+      - name: Controller Hub completion and reliability tests
+        shell: pwsh
+        run: .\scripts\Test-ControllerHub.ps1 -HelperPath .\artifacts\controller-output-host\DKControllerOutputHost.exe
+
+      - name: Upload controller test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Controller-Hub-test-results
+          path: .\artifacts\controller-tests\*.json
+          if-no-files-found: warn
 
       - name: Publish self-contained Windows x64 build
         shell: pwsh
@@ -85,6 +93,10 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path .\artifacts\DK-Desktop-Essentials-win-x64\controller-output-host | Out-Null
           Copy-Item .\artifacts\controller-output-host\* .\artifacts\DK-Desktop-Essentials-win-x64\controller-output-host\ -Recurse -Force
+
+      - name: Verify Windows bundle
+        shell: pwsh
+        run: .\scripts\Verify-WindowsBundle.ps1
 
       - name: Upload Windows build
         uses: actions/upload-artifact@v4

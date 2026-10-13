@@ -15,6 +15,7 @@ public sealed class ControllerProfileLoadResult
 public sealed class ControllerProfileStore
 {
     private readonly string _profileDirectory;
+    private readonly SemaphoreSlim _writeGate = new(1, 1);
     private readonly JsonSerializerOptions _jsonOptions;
 
     public ControllerProfileStore(string? profileDirectory = null)
@@ -39,15 +40,27 @@ public sealed class ControllerProfileStore
 
     public async Task SaveAsync(ControllerProfile profile, CancellationToken cancellationToken = default)
     {
+        await _writeGate.WaitAsync(cancellationToken);
+        try { await SaveCoreAsync(profile, cancellationToken); }
+        finally { _writeGate.Release(); }
+    }
+
+    private async Task SaveCoreAsync(ControllerProfile profile, CancellationToken cancellationToken)
+    {
         Directory.CreateDirectory(_profileDirectory);
         Validate(profile);
 
         var destination = GetProfilePath(profile.Id);
-        var temporary = destination + ".tmp";
+        var temporary = destination + $".{Guid.NewGuid():N}.tmp";
         var json = JsonSerializer.Serialize(profile, _jsonOptions);
 
-        await File.WriteAllTextAsync(temporary, json, cancellationToken);
-        File.Move(temporary, destination, overwrite: true);
+        try
+        {
+            await File.WriteAllTextAsync(temporary, json, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            File.Move(temporary, destination, overwrite: true);
+        }
+        finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }
 
     public async Task<ControllerProfile?> LoadAsync(Guid profileId, CancellationToken cancellationToken = default)
@@ -133,11 +146,14 @@ public sealed class ControllerProfileStore
             throw new InvalidDataException("Imported controller profile JSON cannot be empty.");
 
         var profile = DeserializeValidated(json);
-        if (!preserveId || File.Exists(GetProfilePath(profile.Id)))
-            profile.Id = Guid.NewGuid();
-
-        await SaveAsync(profile, cancellationToken);
-        return profile;
+        await _writeGate.WaitAsync(cancellationToken);
+        try
+        {
+            if (!preserveId || File.Exists(GetProfilePath(profile.Id))) profile.Id = Guid.NewGuid();
+            await SaveCoreAsync(profile, cancellationToken);
+            return profile;
+        }
+        finally { _writeGate.Release(); }
     }
 
     public IReadOnlyList<string> GetValidationErrors(ControllerProfile profile)
@@ -184,7 +200,8 @@ public sealed class ControllerProfileStore
 
     private static List<string> CollectValidationErrors(ControllerProfile profile)
     {
-        var errors = new List<string>();
+        var errors = ControllerProfileShapeValidator.CollectErrors(profile);
+        if (errors.Count > 0) return errors;
 
         if (profile.SchemaVersion != ControllerProfile.CurrentSchemaVersion)
         {
