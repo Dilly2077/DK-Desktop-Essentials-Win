@@ -191,6 +191,80 @@ public sealed class ControllerHubWebBridge
                 return new { deviceId, profileId };
             }
 
+            case "controllerHub:getAdvancedFeatureStatus":
+                return _service.GetAdvancedFeatureBackendStatus();
+
+            case "controllerHub:installAdvancedFeatures":
+                return await _service.InstallAdvancedFeatureBackendAsync(cancellationToken);
+
+            case "controllerHub:removeAdvancedFeatures":
+                await _service.RemoveAdvancedFeatureBackendAsync(cancellationToken);
+                return _service.GetAdvancedFeatureBackendStatus();
+
+            case "controllerHub:listAdvancedDevices":
+                return _service.GetAdvancedFeatureDevices();
+
+            case "controllerHub:readAdvancedState":
+            {
+                var backendId = RequireString(payload, "backendId");
+                if (!_service.TryReadAdvancedState(backendId, out var state) || state is null)
+                    throw new InvalidOperationException("Advanced controller state is not available for this device.");
+                return state;
+            }
+
+            case "controllerHub:setProfileAdvancedDevice":
+                return await _service.SetProfileAdvancedDeviceAsync(
+                    RequireGuid(payload, "profileId"),
+                    ReadOptionalString(payload, "backendId"),
+                    cancellationToken);
+
+            case "controllerHub:rumble":
+            {
+                var ok = _service.TryRumbleAdvancedDevice(
+                    RequireString(payload, "backendId"),
+                    RequireUnitDouble(payload, "lowFrequency"),
+                    RequireUnitDouble(payload, "highFrequency"),
+                    TimeSpan.FromMilliseconds(ReadInt32(payload, "durationMs") ?? 250));
+                return new { ok };
+            }
+
+            case "controllerHub:rumbleTriggers":
+            {
+                var ok = _service.TryRumbleAdvancedTriggers(
+                    RequireString(payload, "backendId"),
+                    RequireUnitDouble(payload, "left"),
+                    RequireUnitDouble(payload, "right"),
+                    TimeSpan.FromMilliseconds(ReadInt32(payload, "durationMs") ?? 250));
+                return new { ok };
+            }
+
+            case "controllerHub:setLed":
+            {
+                var ok = _service.TrySetAdvancedDeviceLed(
+                    RequireString(payload, "backendId"),
+                    RequireByte(payload, "red"),
+                    RequireByte(payload, "green"),
+                    RequireByte(payload, "blue"));
+                return new { ok };
+            }
+
+            case "controllerHub:setPlayerLed":
+            {
+                var playerIndex = ReadInt32(payload, "playerIndex")
+                    ?? throw new ArgumentException("'playerIndex' is required.");
+                var ok = _service.TrySetAdvancedDevicePlayerLed(RequireString(payload, "backendId"), playerIndex);
+                return new { ok };
+            }
+
+            case "controllerHub:setAdaptiveTriggers":
+            {
+                var backendId = RequireString(payload, "backendId");
+                var state = new ControllerAdaptiveTriggerState(
+                    ReadAdaptiveTrigger(payload, "left"),
+                    ReadAdaptiveTrigger(payload, "right"));
+                return new { ok = _service.TrySetAdvancedAdaptiveTriggers(backendId, state) };
+            }
+
             case "controllerHub:getOutputStatus":
                 return _service.GetOutputSessionStatus();
 
@@ -237,6 +311,27 @@ public sealed class ControllerHubWebBridge
 
         return JsonSerializer.Deserialize<ControllerProfile>(profileElement.GetRawText(), _jsonOptions)
             ?? throw new ArgumentException("The profile payload could not be read.");
+    }
+
+    private static ControllerAdaptiveTriggerEffect? ReadAdaptiveTrigger(JsonElement payload, string propertyName)
+    {
+        if (payload.ValueKind != JsonValueKind.Object ||
+            !payload.TryGetProperty(propertyName, out var element) ||
+            element.ValueKind == JsonValueKind.Null)
+            return null;
+
+        if (element.ValueKind != JsonValueKind.Object)
+            throw new ArgumentException($"'{propertyName}' must be an object or null.");
+
+        var modeText = ReadOptionalString(element, "mode") ?? "Off";
+        if (!Enum.TryParse<ControllerAdaptiveTriggerMode>(modeText, ignoreCase: true, out var mode))
+            throw new ArgumentException($"'{propertyName}.mode' must be Off, Resistance, or Vibration.");
+
+        return new ControllerAdaptiveTriggerEffect(
+            mode,
+            ReadUnitDouble(element, "startPosition") ?? 0d,
+            ReadUnitDouble(element, "strength") ?? 0.5d,
+            ReadUnitDouble(element, "frequency") ?? 0.5d);
     }
 
     private string SerializeResponse(
@@ -310,5 +405,29 @@ public sealed class ControllerHubWebBridge
             throw new ArgumentException($"'{propertyName}' must be an integer.");
 
         return parsed;
+    }
+
+    private static double RequireUnitDouble(JsonElement payload, string propertyName) =>
+        ReadUnitDouble(payload, propertyName)
+        ?? throw new ArgumentException($"'{propertyName}' is required.");
+
+    private static double? ReadUnitDouble(JsonElement payload, string propertyName)
+    {
+        if (payload.ValueKind != JsonValueKind.Object || !payload.TryGetProperty(propertyName, out var value) || value.ValueKind == JsonValueKind.Null)
+            return null;
+
+        if (value.ValueKind != JsonValueKind.Number || !value.TryGetDouble(out var parsed) || parsed is < 0d or > 1d)
+            throw new ArgumentException($"'{propertyName}' must be a number between 0 and 1.");
+
+        return parsed;
+    }
+
+    private static byte RequireByte(JsonElement payload, string propertyName)
+    {
+        var value = ReadInt32(payload, propertyName)
+            ?? throw new ArgumentException($"'{propertyName}' is required.");
+        if (value is < byte.MinValue or > byte.MaxValue)
+            throw new ArgumentException($"'{propertyName}' must be between 0 and 255.");
+        return (byte)value;
     }
 }
