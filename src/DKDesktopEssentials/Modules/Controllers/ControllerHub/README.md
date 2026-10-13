@@ -1,6 +1,6 @@
 # Controller Hub / Remapping
 
-Status: **Slices 1-5 implemented; not yet integrated into the visible controller UI**.
+Status: **Slices 1-7 implement the backend and automated harness. Visible UI/editor integration and physical hardware/game acceptance remain pending.**
 
 This module is the shared input/remapping engine for DK Desktop Essentials. It remains separated from the visible UI while each controller slice is built and tested.
 
@@ -20,7 +20,7 @@ This module is the shared input/remapping engine for DK Desktop Essentials. It r
 - Chord conditions.
 - Toggle mappings.
 - Turbo mappings with an explicit 1-30 Hz bound.
-- Macro references in the profile schema, delegated to the suite-wide Macro Engine.
+- Macro references are persisted/validated in profiles; execution requires separate Macro Engine integration.
 - Virtual-output abstraction (`IControllerOutputSink`).
 
 ## Slice 2 - Controller and profile management
@@ -68,7 +68,7 @@ This module is the shared input/remapping engine for DK Desktop Essentials. It r
 - A native background output session continuously reads the selected physical controller, maps it through the selected profile and feeds the virtual controller at a clamped 60-1000 Hz update rate (250 Hz default).
 - Output sessions have explicit start, stop and status operations; shutdown stops the session and tears down the virtual controller.
 - The helper maps standard face/shoulder/stick/menu/view/paddle buttons, d-pad/hat, sticks and triggers into HIDMaestro's abstract gamepad state.
-- Stable HIDMaestro identity keys are derived from the DK profile ID so the virtual device identity remains consistent between sessions.
+- Stable HIDMaestro identity keys combine the DK profile ID and hashed Windows device ID; two controllers using one profile receive separate identities.
 - The Windows release workflow builds and publishes the output helper next to the main application under `controller-output-host`.
 
 ## Slice 5 - Advanced controller features
@@ -92,7 +92,7 @@ Capability support depends on the physical controller, connection mode, Windows 
 
 ### Physical-controller hiding
 
-Physical-device hiding is deliberately **not** automated yet. The maintained HidHide source has continued development, but the latest signed public installer lags the current source and installation/update requires reboot-sensitive filter-driver changes. DK Desktop therefore does not silently add a second system driver or claim double-input prevention is universal. A vetted hiding/exclusive-mode path belongs in Slice 6 compatibility hardening.
+Physical-device hiding/exclusive mode remains unavailable pending separate provider vetting. Physical devices stay visible, so games can receive duplicate input. No filter/hiding driver is installed automatically.
 
 ### WebView bridge protocol
 
@@ -135,9 +135,7 @@ Commands currently available:
 
 ## Not implemented yet
 
-- Physical-controller hiding/exclusive mode; deferred to Slice 6 for a separately vetted driver/compatibility path.
-- Reliability/compatibility hardening beyond the current safe defaults (Slice 6).
-- Full module test harness and completion pass (Slice 7).
+- Physical-controller hiding/exclusive mode; a separately vetted driver/compatibility path is still required.
 - Calibration/drift graphs and polling-rate diagnostics (separate Controller Diagnostics module).
 - Keyboard/mouse output (separate Controller -> KB/mouse module).
 - Executable detection/profile auto-switching (separate Automatic Game Profiles module).
@@ -153,10 +151,15 @@ Virtual-controller compatibility with anti-cheat-protected games must never be p
 
 The controller engine performs no DK telemetry and requires no account. Device state, aliases, defaults, profiles and provider metadata remain local. Network access happens only when the user explicitly installs an optional provider package: HIDMaestro for virtual output or SDL3 for advanced physical features. Each request goes directly to a pinned official GitHub release and the downloaded package is hash-verified before use.
 
-## Next controller-hub slice
+## Module completion
 
-Slice 6: Reliability, safety and compatibility hardening.
+All seven planned backend slices are implemented. See [completion scope and automated validation](../../../../../docs/controller-hub-completion.md) and the [pending hardware acceptance procedure](../../../../../docs/controller-hub-acceptance.md).
 
 ## Slice 6 — Reliability, Safety & Compatibility
 
 See [runtime behavior, compatibility limits and validation](../../../../../docs/controller-hub-slice-6.md). Output sessions are now per-device; optional device hiding remains unavailable pending vetting.
+
+
+## Slice 7 — Module completion and test harness
+
+The completion suite covers mapping vectors, local persistence, bridge/session integration and the actual published helper using a test-only SDK substitute. The existing reliability suite also runs. Both produce local JSON reports in Windows CI; bundle verification rejects test SDKs/assemblies. See the completion document for commands and limitations.

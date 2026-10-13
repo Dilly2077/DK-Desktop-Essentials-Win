@@ -296,7 +296,8 @@ public sealed class ControllerHubWebBridge
             }
 
             case "controllerHub:stopOutputSession":
-                await _service.StopOutputSessionAsync(ReadString(payload, "deviceId"));
+                // A mistyped ID must not silently become the stop-all command.
+                await _service.StopOutputSessionAsync(ReadDeviceIdForStop(payload));
                 return _service.GetOutputSessionStatus();
 
             default:
@@ -358,6 +359,16 @@ public sealed class ControllerHubWebBridge
         return value.ValueKind == JsonValueKind.String ? value.GetString() : null;
     }
 
+    private static string? ReadDeviceIdForStop(JsonElement payload)
+    {
+        if (payload.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null) return null;
+        if (payload.ValueKind != JsonValueKind.Object) throw new ArgumentException("'payload' must be an object.");
+        if (!payload.TryGetProperty("deviceId", out var value) || value.ValueKind == JsonValueKind.Null) return null;
+        if (value.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(value.GetString()))
+            throw new ArgumentException("'deviceId' must be a non-empty string or null for stop-all.");
+        return value.GetString();
+    }
+
     private static string RequireString(JsonElement payload, string propertyName) =>
         ReadOptionalString(payload, propertyName)
         ?? throw new ArgumentException($"'{propertyName}' is required.");
@@ -416,7 +427,7 @@ public sealed class ControllerHubWebBridge
         if (payload.ValueKind != JsonValueKind.Object || !payload.TryGetProperty(propertyName, out var value) || value.ValueKind == JsonValueKind.Null)
             return null;
 
-        if (value.ValueKind != JsonValueKind.Number || !value.TryGetDouble(out var parsed) || parsed is < 0d or > 1d)
+        if (value.ValueKind != JsonValueKind.Number || !value.TryGetDouble(out var parsed) || !double.IsFinite(parsed) || parsed is < 0d or > 1d)
             throw new ArgumentException($"'{propertyName}' must be a number between 0 and 1.");
 
         return parsed;

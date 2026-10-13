@@ -14,12 +14,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Helper watchdog releases a stalled parent", Watchdog),
     ("Non-finite output is neutral and identities are per device/profile", Values)
 };
-foreach (var test in tests)
-{
-    await test.Run();
-    Console.WriteLine($"PASS: {test.Name}");
-}
-Console.WriteLine($"Passed {tests.Length} reliability tests.");
+return await TestHarness.RunAsync("Controller reliability", tests, args);
 
 static void Check(bool condition, string message)
 {

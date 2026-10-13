@@ -8,5 +8,6 @@
   <ItemGroup>
     <ProjectReference Include="../../src/DKDesktopEssentials/DKDesktopEssentials.csproj" />
     <Compile Include="../../src/DKControllerOutputHost/OutputProtocol.cs" Link="OutputProtocol.cs" />
+    <Compile Include="../TestHarness.cs" Link="TestHarness.cs" />
   </ItemGroup>
 </Project>

@@ -6,6 +6,12 @@ public static class ControllerMappingAnalyzer
     {
         ArgumentNullException.ThrowIfNull(profile);
         var conflicts = new List<ControllerMappingConflict>();
+        var shapeErrors = ControllerProfileShapeValidator.CollectErrors(profile);
+        if (shapeErrors.Count > 0)
+            return shapeErrors.Select(message => new ControllerMappingConflict(MappingConflictSeverity.Error, "invalid-profile-shape", message)).ToArray();
+        var duplicateIds = profile.Layers.GroupBy(layer => layer.Id).Where(group => group.Count() > 1).Select(group => group.Key).ToArray();
+        if (duplicateIds.Length > 0)
+            return duplicateIds.Select(id => new ControllerMappingConflict(MappingConflictSeverity.Error, "duplicate-layer-id", $"Layer ID '{id}' is duplicated.", id)).ToArray();
         var layers = profile.Layers.ToDictionary(layer => layer.Id, StringComparer.Ordinal);
 
         foreach (var layer in profile.Layers)

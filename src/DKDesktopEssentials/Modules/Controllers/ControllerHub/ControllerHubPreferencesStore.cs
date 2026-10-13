@@ -16,6 +16,7 @@ public sealed class ControllerHubPreferences
 public sealed class ControllerHubPreferencesStore
 {
     private readonly string _settingsPath;
+    private readonly SemaphoreSlim _writeGate = new(1, 1);
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
         WriteIndented = true,
@@ -44,7 +45,7 @@ public sealed class ControllerHubPreferencesStore
         {
             var json = await File.ReadAllTextAsync(_settingsPath, cancellationToken);
             var settings = JsonSerializer.Deserialize<ControllerHubPreferences>(json, _jsonOptions);
-            if (settings is null || settings.SchemaVersion != ControllerHubPreferences.CurrentSchemaVersion)
+            if (settings is null || settings.DeviceNames is null || settings.DefaultProfileByDevice is null || settings.SchemaVersion != ControllerHubPreferences.CurrentSchemaVersion)
                 return new ControllerHubPreferences();
 
             settings.DeviceNames = new Dictionary<string, string>(settings.DeviceNames, StringComparer.Ordinal);
@@ -64,6 +65,25 @@ public sealed class ControllerHubPreferencesStore
 
     public async Task SaveAsync(ControllerHubPreferences settings, CancellationToken cancellationToken = default)
     {
+        await _writeGate.WaitAsync(cancellationToken);
+        try { await SaveCoreAsync(settings, cancellationToken); }
+        finally { _writeGate.Release(); }
+    }
+
+    private async Task UpdateAsync(Action<ControllerHubPreferences> update, CancellationToken cancellationToken)
+    {
+        await _writeGate.WaitAsync(cancellationToken);
+        try
+        {
+            var settings = await LoadAsync(cancellationToken);
+            update(settings);
+            await SaveCoreAsync(settings, cancellationToken);
+        }
+        finally { _writeGate.Release(); }
+    }
+
+    private async Task SaveCoreAsync(ControllerHubPreferences settings, CancellationToken cancellationToken)
+    {
         ArgumentNullException.ThrowIfNull(settings);
         settings.SchemaVersion = ControllerHubPreferences.CurrentSchemaVersion;
 
@@ -72,60 +92,43 @@ public sealed class ControllerHubPreferencesStore
             Directory.CreateDirectory(directory);
 
         var json = JsonSerializer.Serialize(settings, _jsonOptions);
-        var temporary = _settingsPath + ".tmp";
-        await File.WriteAllTextAsync(temporary, json, cancellationToken);
-        File.Move(temporary, _settingsPath, overwrite: true);
+        var temporary = _settingsPath + $".{Guid.NewGuid():N}.tmp";
+        try
+        {
+            await File.WriteAllTextAsync(temporary, json, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            File.Move(temporary, _settingsPath, overwrite: true);
+        }
+        finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }
 
-    public async Task SetDeviceNameAsync(string deviceId, string? name, CancellationToken cancellationToken = default)
+    public Task SetDeviceNameAsync(string deviceId, string? name, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(deviceId))
-            throw new ArgumentException("Device ID cannot be empty.", nameof(deviceId));
-
-        var settings = await LoadAsync(cancellationToken);
-        if (string.IsNullOrWhiteSpace(name))
-            settings.DeviceNames.Remove(deviceId);
-        else
-            settings.DeviceNames[deviceId] = name.Trim();
-
-        await SaveAsync(settings, cancellationToken);
+        ArgumentException.ThrowIfNullOrWhiteSpace(deviceId);
+        return UpdateAsync(settings =>
+        {
+            if (string.IsNullOrWhiteSpace(name)) settings.DeviceNames.Remove(deviceId);
+            else settings.DeviceNames[deviceId] = name.Trim();
+        }, cancellationToken);
     }
 
-    public async Task SetDefaultDeviceAsync(string? deviceId, CancellationToken cancellationToken = default)
+    public Task SetDefaultDeviceAsync(string? deviceId, CancellationToken cancellationToken = default) =>
+        UpdateAsync(settings => settings.DefaultDeviceId = string.IsNullOrWhiteSpace(deviceId) ? null : deviceId, cancellationToken);
+
+    public Task SetDefaultProfileAsync(string deviceId, Guid? profileId, CancellationToken cancellationToken = default)
     {
-        var settings = await LoadAsync(cancellationToken);
-        settings.DefaultDeviceId = string.IsNullOrWhiteSpace(deviceId) ? null : deviceId;
-        await SaveAsync(settings, cancellationToken);
+        ArgumentException.ThrowIfNullOrWhiteSpace(deviceId);
+        return UpdateAsync(settings =>
+        {
+            if (profileId is null || profileId == Guid.Empty) settings.DefaultProfileByDevice.Remove(deviceId);
+            else settings.DefaultProfileByDevice[deviceId] = profileId.Value;
+        }, cancellationToken);
     }
 
-    public async Task SetDefaultProfileAsync(string deviceId, Guid? profileId, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(deviceId))
-            throw new ArgumentException("Device ID cannot be empty.", nameof(deviceId));
-
-        var settings = await LoadAsync(cancellationToken);
-        if (profileId is null || profileId == Guid.Empty)
-            settings.DefaultProfileByDevice.Remove(deviceId);
-        else
-            settings.DefaultProfileByDevice[deviceId] = profileId.Value;
-
-        await SaveAsync(settings, cancellationToken);
-    }
-
-    public async Task RemoveProfileReferencesAsync(Guid profileId, CancellationToken cancellationToken = default)
-    {
-        var settings = await LoadAsync(cancellationToken);
-        var affectedDevices = settings.DefaultProfileByDevice
-            .Where(pair => pair.Value == profileId)
-            .Select(pair => pair.Key)
-            .ToArray();
-
-        if (affectedDevices.Length == 0)
-            return;
-
-        foreach (var deviceId in affectedDevices)
-            settings.DefaultProfileByDevice.Remove(deviceId);
-
-        await SaveAsync(settings, cancellationToken);
-    }
+    public Task RemoveProfileReferencesAsync(Guid profileId, CancellationToken cancellationToken = default) =>
+        UpdateAsync(settings =>
+        {
+            foreach (var device in settings.DefaultProfileByDevice.Where(pair => pair.Value == profileId).Select(pair => pair.Key).ToArray())
+                settings.DefaultProfileByDevice.Remove(device);
+        }, cancellationToken);
 }
