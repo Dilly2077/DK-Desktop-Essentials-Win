@@ -8,6 +8,7 @@ public sealed partial class ControllerHubService : IAsyncDisposable
     private readonly ControllerHubPreferencesStore _preferencesStore;
     private readonly HidMaestroPackageManager _outputPackageManager;
     private IControllerOutputSink _outputSink;
+    private readonly Lazy<ControllerAdvancedFeatures> _advancedFeatures;
     private bool _disposed;
 
     public ControllerHubService(
@@ -16,7 +17,8 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         ControllerProfileStore? profileStore = null,
         ControllerHubPreferencesStore? preferencesStore = null,
         IControllerOutputSink? outputSink = null,
-        HidMaestroPackageManager? outputPackageManager = null)
+        HidMaestroPackageManager? outputPackageManager = null,
+        IAdvancedControllerBackend? advancedBackend = null)
     {
         _provider = provider ?? new WindowsGamingInputControllerProvider();
         _mappingEngine = mappingEngine ?? new ControllerMappingEngine();
@@ -24,6 +26,8 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         _preferencesStore = preferencesStore ?? new ControllerHubPreferencesStore();
         _outputSink = outputSink ?? new NoOutputSink();
         _outputPackageManager = outputPackageManager ?? new HidMaestroPackageManager();
+        _advancedFeatures = new Lazy<ControllerAdvancedFeatures>(
+            () => new ControllerAdvancedFeatures(_provider, advancedBackend));
 
         _provider.DeviceAdded += OnDeviceAdded;
         _provider.DeviceRemoved += OnDeviceRemoved;
@@ -251,6 +255,8 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         _provider.DeviceAdded -= OnDeviceAdded;
         _provider.DeviceRemoved -= OnDeviceRemoved;
         await StopOutputSessionAsync();
+        if (_advancedFeatures.IsValueCreated)
+            await _advancedFeatures.Value.DisposeAsync();
         _provider.Dispose();
         await _outputSink.DisposeAsync();
     }
