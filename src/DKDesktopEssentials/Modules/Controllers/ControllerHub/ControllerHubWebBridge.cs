@@ -191,6 +191,48 @@ public sealed class ControllerHubWebBridge
                 return new { deviceId, profileId };
             }
 
+            case "controllerHub:listAdvancedCapabilities":
+                return _service.ListAdvancedCapabilities();
+
+            case "controllerHub:getAdvancedCapabilities":
+                return _service.GetAdvancedCapabilities(RequireString(payload, "deviceId"));
+
+            case "controllerHub:readMotion":
+            {
+                var deviceId = RequireString(payload, "deviceId");
+                var available = _service.TryReadControllerMotion(deviceId, out var reading);
+                return new { available, reading };
+            }
+
+            case "controllerHub:readTouchpad":
+            {
+                var deviceId = RequireString(payload, "deviceId");
+                var available = _service.TryReadControllerTouchpad(deviceId, out var reading);
+                return new { available, reading };
+            }
+
+            case "controllerHub:setFeedback":
+            {
+                var deviceId = RequireString(payload, "deviceId");
+                if (payload.ValueKind != JsonValueKind.Object ||
+                    !payload.TryGetProperty("feedback", out var feedbackElement))
+                    throw new ArgumentException("'feedback' object is required.");
+                var feedback = JsonSerializer.Deserialize<ControllerFeedbackRequest>(
+                    feedbackElement.GetRawText(), _jsonOptions)
+                    ?? throw new ArgumentException("Invalid feedback payload.");
+                return await _service.SetControllerFeedbackAsync(deviceId, feedback, cancellationToken);
+            }
+
+            case "controllerHub:stopFeedback":
+                return await _service.StopControllerFeedbackAsync(RequireString(payload, "deviceId"));
+
+            case "controllerHub:saveProfile":
+            {
+                var profile = ReadProfile(payload);
+                await _service.SaveProfileAsync(profile, cancellationToken);
+                return profile;
+            }
+
             case "controllerHub:getOutputStatus":
                 return _service.GetOutputSessionStatus();
 
