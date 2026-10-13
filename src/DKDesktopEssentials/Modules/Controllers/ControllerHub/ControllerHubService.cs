@@ -53,6 +53,15 @@ public sealed partial class ControllerHubService : IAsyncDisposable
             return false;
 
         mappedState = _mappingEngine.Map(snapshot, profile, DateTimeOffset.UtcNow);
+        var advanced = profile.AdvancedMappings;
+        if (advanced?.Gyro?.Enabled == true &&
+            _advancedFeatures.Value.TryReadMotion(deviceId, out var motion) && motion is not null)
+            ControllerAdvancedMapping.ApplyMotion(mappedState, motion, advanced.Gyro);
+
+        if (advanced?.Touch?.Enabled == true &&
+            _advancedFeatures.Value.TryReadTouchpad(deviceId, out var touch) && touch is not null)
+            ControllerAdvancedMapping.ApplyTouch(mappedState, touch, advanced.Touch);
+
         return true;
     }
 
