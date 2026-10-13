@@ -28,6 +28,7 @@ public interface IAdvancedControllerBackend : IAsyncDisposable
     ValueTask<ControllerFeedbackResult> SetFeedbackAsync(
         string deviceId, ControllerFeedbackRequest request,
         CancellationToken cancellationToken = default);
+    ValueTask<ControllerFeedbackResult> StopFeedbackAsync(string deviceId);
 }
 
 public sealed record ControllerMotionReading(
@@ -47,7 +48,10 @@ public sealed record ControllerFeedbackRequest(
     byte? LightbarBlue = null,
     int? PlayerLed = null,
     byte[]? LeftAdaptiveTrigger = null,
-    byte[]? RightAdaptiveTrigger = null);
+    byte[]? RightAdaptiveTrigger = null,
+    double? LeftTriggerRumble = null,
+    double? RightTriggerRumble = null,
+    int DurationMilliseconds = 500);
 
 public sealed record ControllerFeedbackResult(bool Applied, string Reason);
 
@@ -85,6 +89,9 @@ public sealed class UnsupportedAdvancedControllerBackend : IAdvancedControllerBa
         CancellationToken cancellationToken = default) =>
         ValueTask.FromResult(new ControllerFeedbackResult(false,
             "No verified device-specific feedback backend is installed."));
+
+    public ValueTask<ControllerFeedbackResult> StopFeedbackAsync(string deviceId) =>
+        ValueTask.FromResult(new ControllerFeedbackResult(false, "No feedback backend is installed."));
 
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 }
