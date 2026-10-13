@@ -385,6 +385,7 @@ public sealed class Sdl3AdvancedControllerProvider : IControllerAdvancedFeatureP
         }
 
         var seen = new HashSet<string>(StringComparer.Ordinal);
+        var ambiguous = new HashSet<string>(StringComparer.Ordinal);
         try
         {
             for (var index = 0; index < count; index++)
@@ -398,7 +399,11 @@ public sealed class Sdl3AdvancedControllerProvider : IControllerAdvancedFeatureP
                 try
                 {
                     var descriptor = CreateDescriptor(handle, instanceId);
-                    seen.Add(descriptor.BackendId);
+                    if (!seen.Add(descriptor.BackendId))
+                    {
+                        ambiguous.Add(descriptor.BackendId);
+                        continue;
+                    }
 
                     if (_devices.TryGetValue(descriptor.BackendId, out var existing) && existing.InstanceId == instanceId)
                     {
@@ -424,7 +429,8 @@ public sealed class Sdl3AdvancedControllerProvider : IControllerAdvancedFeatureP
             _api.Free(idsPointer);
         }
 
-        foreach (var staleKey in _devices.Keys.Where(key => !seen.Contains(key)).ToArray())
+        // Duplicate backend identities must never silently choose one physical controller.
+        foreach (var staleKey in _devices.Keys.Where(key => !seen.Contains(key) || ambiguous.Contains(key)).ToArray())
         {
             _api.CloseGamepad(_devices[staleKey].Handle);
             _devices.Remove(staleKey);

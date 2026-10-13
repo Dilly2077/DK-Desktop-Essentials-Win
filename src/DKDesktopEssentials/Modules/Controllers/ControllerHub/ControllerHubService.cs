@@ -11,6 +11,7 @@ public sealed partial class ControllerHubService : IAsyncDisposable
     private IControllerAdvancedFeatureProvider _advancedProvider;
     private IControllerOutputSink _outputSink;
     private readonly SemaphoreSlim _legacyOutputGate = new(1, 1);
+    private readonly Func<ControllerOutputMode, string, CancellationToken, Task<IControllerOutputSink>> _sessionSinkFactory;
     private bool _disposed;
 
     public ControllerHubService(
@@ -21,7 +22,8 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         IControllerOutputSink? outputSink = null,
         HidMaestroPackageManager? outputPackageManager = null,
         Sdl3PackageManager? advancedPackageManager = null,
-        IControllerAdvancedFeatureProvider? advancedProvider = null)
+        IControllerAdvancedFeatureProvider? advancedProvider = null,
+        Func<ControllerOutputMode, string, CancellationToken, Task<IControllerOutputSink>>? sessionSinkFactory = null)
     {
         _provider = provider ?? new WindowsGamingInputControllerProvider();
         _mappingEngine = mappingEngine ?? new ControllerMappingEngine();
@@ -29,6 +31,8 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         _preferencesStore = preferencesStore ?? new ControllerHubPreferencesStore();
         _outputSink = outputSink ?? new NoOutputSink();
         _outputPackageManager = outputPackageManager ?? new HidMaestroPackageManager();
+        _sessionSinkFactory = sessionSinkFactory ?? ((mode, identity, token) =>
+            HidMaestroOutputSink.CreateForSessionAsync(mode, _outputPackageManager, identity, token));
         _advancedPackageManager = advancedPackageManager ?? new Sdl3PackageManager();
         _advancedProvider = advancedProvider ?? new Sdl3AdvancedControllerProvider(_advancedPackageManager);
 
@@ -233,6 +237,10 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         string? identityKey = null,
         CancellationToken cancellationToken = default)
     {
+        await _outputSessionGate.WaitAsync(cancellationToken);
+        try
+        {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         if (mode is not ControllerOutputMode.VirtualXbox360 and not ControllerOutputMode.VirtualDualShock4)
             throw new ArgumentOutOfRangeException(nameof(mode), mode, "Select Xbox 360 or DualShock 4 virtual output.");
 
@@ -250,6 +258,8 @@ public sealed partial class ControllerHubService : IAsyncDisposable
             await sink.DisposeAsync();
             throw;
         }
+        }
+        finally { _outputSessionGate.Release(); }
     }
 
     public ValueTask DisableVirtualOutputAsync() =>
@@ -365,6 +375,8 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         try
         {
         var previous = _outputSink;
+        if (_disposed && outputSink is not NoOutputSink)
+            throw new ObjectDisposedException(nameof(ControllerHubService));
         if (ReferenceEquals(previous, outputSink)) return;
         _outputSink = outputSink;
         _mappingEngine.ResetRuntimeState();

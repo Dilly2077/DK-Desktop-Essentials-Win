@@ -160,6 +160,7 @@ public partial class MainWindow : Window
         _shutdownStarted = true;
         IsEnabled = false;
         try { await _controllerHubService.DisposeAsync(); }
+        catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Controller shutdown: {ex.Message}"); }
         finally { _shutdownComplete = true; Close(); }
     }
 }

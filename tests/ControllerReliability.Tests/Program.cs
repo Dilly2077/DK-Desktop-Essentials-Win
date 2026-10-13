@@ -5,6 +5,7 @@ using DKControllerOutputHost;
 var tests = new (string Name, Func<Task> Run)[]
 {
     ("Shared profile mapping is isolated by device and safe under concurrent reset", MappingIsolation),
+    ("Service serializes concurrent start, targeted stop and shutdown", Coordinator),
     ("Two sessions run independently; disconnect neutralizes and exact reconnect requires release", Reconnect),
     ("Backend failure recreates output and gates held buttons", Recovery),
     ("Persistent backend failure exhausts a bounded recovery budget", RecoveryLimit),
@@ -87,6 +88,37 @@ static async Task Reconnect()
     Check(b.Last == 1 && !b.Disposed, "Stopping A stopped B");
 }
 
+static async Task Coordinator()
+{
+    var directory = Path.Combine(Path.GetTempPath(), "DK-reliability-" + Guid.NewGuid().ToString("N"));
+    var store = new ControllerProfileStore(directory);
+    var profile = ToggleProfile(); profile.OutputMode = ControllerOutputMode.VirtualXbox360;
+    await store.SaveAsync(profile);
+    var provider = new FakeProvider(); provider.Values["a"] = 0; provider.Values["b"] = 0;
+    var sinks = new ConcurrentDictionary<string, FakeSink>();
+    await using var service = new ControllerHubService(provider: provider, profileStore: store,
+        sessionSinkFactory: (_, identity, _) =>
+        {
+            var sink = new FakeSink(); sinks[identity] = sink; return Task.FromResult<IControllerOutputSink>(sink);
+        });
+    try
+    {
+        await Task.WhenAll(service.StartOutputSessionAsync("a", profile.Id), service.StartOutputSessionAsync("b", profile.Id));
+        Check(sinks.Count == 2, "Concurrent starts did not produce independent sinks");
+        var a = sinks[ControllerOutputSession.Identity("a", profile.Id)];
+        var b = sinks[ControllerOutputSession.Identity("b", profile.Id)];
+        await service.StopOutputSessionAsync("a");
+        Check(a.Disposed && !b.Disposed, "Targeted service stop affected another controller");
+        await Task.WhenAll(service.DisposeAsync().AsTask(), service.DisposeAsync().AsTask());
+        Check(b.Disposed && b.Last == 0, "Shutdown did not neutralize and dispose remaining output");
+        var rejected = false;
+        try { await service.StartOutputSessionAsync("a", profile.Id); }
+        catch (ObjectDisposedException) { rejected = true; }
+        Check(rejected, "Service accepted output after shutdown");
+    }
+    finally { await service.DisposeAsync(); Directory.Delete(directory, recursive: true); }
+}
+
 static async Task Recovery()
 {
     var provider = new FakeProvider(); provider.Values["a"] = 0;
@@ -156,6 +188,12 @@ static async Task Watchdog()
     try { await OutputProtocol.RunAsync(new StalledReader(), s => neutralized = s.Count == 0, _ => { }, TimeSpan.FromMilliseconds(30)); }
     catch (TimeoutException) { }
     Check(neutralized, "Watchdog did not neutralize");
+    using var blocked = new SynchronouslyBlockedReader();
+    neutralized = false;
+    try { await OutputProtocol.RunAsync(blocked, s => neutralized = s.Count == 0, _ => { }, TimeSpan.FromMilliseconds(30)); }
+    catch (TimeoutException) { }
+    finally { blocked.Release.Set(); }
+    Check(neutralized, "Synchronous Console-style read bypassed watchdog");
 }
 
 static Task Values()
@@ -173,6 +211,12 @@ static Task Values()
 sealed class StalledReader : TextReader
 {
     public override Task<string?> ReadLineAsync() => new TaskCompletionSource<string?>().Task;
+}
+
+sealed class SynchronouslyBlockedReader : TextReader
+{
+    public ManualResetEventSlim Release { get; } = new();
+    public override Task<string?> ReadLineAsync() { Release.Wait(); return Task.FromResult<string?>(null); }
 }
 
 sealed class FakeSink : IControllerOutputSink

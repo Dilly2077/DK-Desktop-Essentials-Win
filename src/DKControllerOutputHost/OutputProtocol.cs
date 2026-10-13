@@ -13,7 +13,9 @@ public static class OutputProtocol
         {
             while (true)
             {
-                var line = await input.ReadLineAsync().WaitAsync(watchdog ?? TimeSpan.FromSeconds(1));
+                // Console.In may synchronously block inside ReadLineAsync. Keep that call off
+                // this continuation so the independent watchdog can still expire.
+                var line = await Task.Run(() => input.ReadLineAsync()).WaitAsync(watchdog ?? TimeSpan.FromSeconds(1));
                 if (line is null) break;
                 using var document = JsonDocument.Parse(line);
                 var root = document.RootElement;

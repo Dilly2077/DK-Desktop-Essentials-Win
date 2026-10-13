@@ -29,7 +29,7 @@ public sealed partial class ControllerHubService
             if (_sessions.TryRemove(deviceId, out var previous)) await previous.DisposeAsync();
             var session = new ControllerOutputSession(device, profile, updateHz, _provider,
                 () => _advancedProvider,
-                token => HidMaestroOutputSink.CreateForSessionAsync(profile.OutputMode, _outputPackageManager,
+                token => _sessionSinkFactory(profile.OutputMode,
                     ControllerOutputSession.Identity(deviceId, profileId), token));
             try
             {
