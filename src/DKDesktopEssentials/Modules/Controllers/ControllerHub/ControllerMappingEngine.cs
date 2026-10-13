@@ -2,6 +2,7 @@ namespace DKDesktopEssentials.Modules.Controllers.ControllerHub;
 
 public sealed class ControllerMappingEngine
 {
+    private readonly object _runtimeGate = new();
     private readonly Dictionary<string, bool> _toggleStates = new(StringComparer.Ordinal);
     private readonly Dictionary<string, bool> _previousPressedStates = new(StringComparer.Ordinal);
     private readonly Dictionary<string, bool> _layerToggleStates = new(StringComparer.Ordinal);
@@ -9,6 +10,11 @@ public sealed class ControllerMappingEngine
     private readonly Dictionary<string, GestureRuntimeState> _gestureStates = new(StringComparer.Ordinal);
 
     public void ResetRuntimeState()
+    {
+        lock (_runtimeGate) ResetCore();
+    }
+
+    private void ResetCore()
     {
         _toggleStates.Clear();
         _previousPressedStates.Clear();
@@ -21,6 +27,11 @@ public sealed class ControllerMappingEngine
         ControllerSnapshot snapshot,
         ControllerProfile profile,
         DateTimeOffset now)
+    {
+        lock (_runtimeGate) return MapCore(snapshot, profile, now);
+    }
+
+    private MappedControllerState MapCore(ControllerSnapshot snapshot, ControllerProfile profile, DateTimeOffset now)
     {
         var output = new MappedControllerState();
 
@@ -70,7 +81,7 @@ public sealed class ControllerMappingEngine
                 }
                 else
                 {
-                    var key = $"{profile.Id:N}:layer:{layer.Id}";
+                    var key = $"{snapshot.DeviceId.Length}:{snapshot.DeviceId}:{profile.Id:N}:layer:{layer.Id}";
                     var wasPressed = _previousLayerPressedStates.TryGetValue(key, out var previous) && previous;
 
                     if (pressed && !wasPressed)
@@ -161,7 +172,7 @@ public sealed class ControllerMappingEngine
             }
         }
 
-        var runtimeKey = $"{profile.Id:N}:{layer.Id}:{binding.Id}";
+        var runtimeKey = $"{snapshot.DeviceId.Length}:{snapshot.DeviceId}:{profile.Id:N}:{layer.Id}:{binding.Id}";
         var pressEvaluation = EvaluatePressBehavior(binding, runtimeKey, sourcePressed, now);
         var bindingActive = pressEvaluation.Active;
         var wasActive = _previousPressedStates.TryGetValue(runtimeKey, out var previousPressed) && previousPressed;

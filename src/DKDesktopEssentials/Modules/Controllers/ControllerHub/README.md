@@ -156,3 +156,7 @@ The controller engine performs no DK telemetry and requires no account. Device s
 ## Next controller-hub slice
 
 Slice 6: Reliability, safety and compatibility hardening.
+
+## Slice 6 — Reliability, Safety & Compatibility
+
+See [runtime behavior, compatibility limits and validation](../../../../../docs/controller-hub-slice-6.md). Output sessions are now per-device; optional device hiding remains unavailable pending vetting.

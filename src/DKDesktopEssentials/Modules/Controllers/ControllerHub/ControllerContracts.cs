@@ -215,7 +215,7 @@ public sealed class MappedControllerState
     public double this[StandardControl control]
     {
         get => _controls.TryGetValue(control, out var value) ? value : 0d;
-        set => _controls[control] = Math.Clamp(value, -1d, 1d);
+        set => _controls[control] = double.IsFinite(value) ? Math.Clamp(value, -1d, 1d) : 0d;
     }
 
     public void Clear(StandardControl control) => _controls[control] = 0d;

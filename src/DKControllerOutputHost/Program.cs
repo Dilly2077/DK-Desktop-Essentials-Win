@@ -79,41 +79,7 @@ internal static class Program
             administrator = IsAdministrator()
         });
 
-        string? line;
-        while ((line = await Console.In.ReadLineAsync()) is not null)
-        {
-            if (string.IsNullOrWhiteSpace(line))
-                continue;
-
-            try
-            {
-                using var document = JsonDocument.Parse(line);
-                var root = document.RootElement;
-                var type = root.TryGetProperty("type", out var typeElement) ? typeElement.GetString() : null;
-
-                if (type == "stop")
-                    break;
-
-                if (type != "state")
-                    continue;
-
-                var controls = new Dictionary<string, double>(StringComparer.Ordinal);
-                if (root.TryGetProperty("controls", out var controlsElement) && controlsElement.ValueKind == JsonValueKind.Object)
-                {
-                    foreach (var property in controlsElement.EnumerateObject())
-                    {
-                        if (property.Value.TryGetDouble(out var value))
-                            controls[property.Name] = value;
-                    }
-                }
-
-                session.Submit(controls);
-            }
-            catch (Exception ex)
-            {
-                Write(new { type = "stateError", ok = false, error = ex.GetBaseException().Message });
-            }
-        }
+        await OutputProtocol.RunAsync(Console.In, session.Submit, Write);
 
         return 0;
     }
@@ -383,8 +349,11 @@ internal sealed class HidMaestroSession : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        if (_controller is IDisposable controllerDisposable)
-            controllerDisposable.Dispose();
-        _context.Dispose();
+        try
+        {
+            if (_controller is IDisposable controllerDisposable) controllerDisposable.Dispose();
+        }
+        finally { _context.Dispose(); }
     }
 }
+

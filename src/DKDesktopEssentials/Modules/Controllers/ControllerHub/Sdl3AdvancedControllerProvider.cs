@@ -372,8 +372,17 @@ public sealed class Sdl3AdvancedControllerProvider : IControllerAdvancedFeatureP
     {
         _api!.UpdateGamepads();
         var idsPointer = _api.GetGamepads(out var count);
-        if (idsPointer == 0 || count < 0)
+        if (count < 0)
             return;
+        if (idsPointer == 0)
+        {
+            if (count == 0)
+            {
+                foreach (var device in _devices.Values) _api.CloseGamepad(device.Handle);
+                _devices.Clear();
+            }
+            return;
+        }
 
         var seen = new HashSet<string>(StringComparer.Ordinal);
         try
@@ -391,14 +400,15 @@ public sealed class Sdl3AdvancedControllerProvider : IControllerAdvancedFeatureP
                     var descriptor = CreateDescriptor(handle, instanceId);
                     seen.Add(descriptor.BackendId);
 
-                    if (_devices.TryGetValue(descriptor.BackendId, out var existing))
+                    if (_devices.TryGetValue(descriptor.BackendId, out var existing) && existing.InstanceId == instanceId)
                     {
                         existing.Descriptor = descriptor;
                     }
                     else
                     {
+                        if (existing is not null) _api.CloseGamepad(existing.Handle);
                         EnableSensors(handle, descriptor.Capabilities);
-                        _devices[descriptor.BackendId] = new OpenGamepad(handle, descriptor);
+                        _devices[descriptor.BackendId] = new OpenGamepad(handle, descriptor, instanceId);
                         keepHandle = true;
                     }
                 }
@@ -570,7 +580,15 @@ public sealed class Sdl3AdvancedControllerProvider : IControllerAdvancedFeatureP
             if (_api is not null)
             {
                 foreach (var device in _devices.Values)
+                {
+                    // Release persistent feedback before closing physical-device handles.
+                    _api.RumbleGamepad(device.Handle, 0, 0, 0);
+                    _api.RumbleTriggers(device.Handle, 0, 0, 0);
+                    if (device.Descriptor.Capabilities.HasFlag(ControllerFeatureCapability.AdaptiveTriggers))
+                        _api.SendEffect(device.Handle, BuildDualSenseTriggerPacket(new(
+                            new(ControllerAdaptiveTriggerMode.Off), new(ControllerAdaptiveTriggerMode.Off))));
                     _api.CloseGamepad(device.Handle);
+                }
                 _devices.Clear();
 
                 if (_initialized)
@@ -589,11 +607,14 @@ public sealed class Sdl3AdvancedControllerProvider : IControllerAdvancedFeatureP
 
     private sealed class OpenGamepad
     {
-        public OpenGamepad(nint handle, ControllerAdvancedDeviceDescriptor descriptor)
+        public OpenGamepad(nint handle, ControllerAdvancedDeviceDescriptor descriptor, uint instanceId)
         {
+            InstanceId = instanceId;
             Handle = handle;
             Descriptor = descriptor;
         }
+
+        public uint InstanceId { get; }
 
         public nint Handle { get; }
         public ControllerAdvancedDeviceDescriptor Descriptor { get; set; }

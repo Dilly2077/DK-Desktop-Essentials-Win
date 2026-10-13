@@ -211,6 +211,10 @@ public sealed class HidMaestroOutputSink : IControllerOutputSink
     public string Name { get; }
     public bool IsAvailable => !_disposed && !_process.HasExited;
 
+    public static async Task<IControllerOutputSink> CreateForSessionAsync(ControllerOutputMode mode,
+        HidMaestroPackageManager manager, string identity, CancellationToken token) =>
+        await CreateAsync(mode, manager, identity, token);
+
     public static async Task<HidMaestroOutputSink> CreateAsync(
         ControllerOutputMode mode,
         HidMaestroPackageManager packageManager,
@@ -249,6 +253,9 @@ public sealed class HidMaestroOutputSink : IControllerOutputSink
 
         var process = Process.Start(start)
             ?? throw new InvalidOperationException("Could not start the controller-output helper.");
+        // Drain diagnostics continuously so a full stderr pipe cannot stall the helper.
+        process.ErrorDataReceived += (_, _) => { };
+        process.BeginErrorReadLine();
 
         try
         {
@@ -257,10 +264,7 @@ public sealed class HidMaestroOutputSink : IControllerOutputSink
             var readyLine = await process.StandardOutput.ReadLineAsync(timeout.Token);
             if (string.IsNullOrWhiteSpace(readyLine))
             {
-                var error = await process.StandardError.ReadToEndAsync(timeout.Token);
-                throw new InvalidOperationException(string.IsNullOrWhiteSpace(error)
-                    ? "The controller-output helper exited before becoming ready. Run DK Desktop Essentials as administrator when using virtual output."
-                    : error.Trim());
+                throw new InvalidOperationException("The controller-output helper exited before becoming ready.");
             }
 
             using var ready = JsonDocument.Parse(readyLine);
@@ -291,11 +295,19 @@ public sealed class HidMaestroOutputSink : IControllerOutputSink
         var controls = state.Controls.ToDictionary(pair => pair.Key.ToString(), pair => pair.Value, StringComparer.Ordinal);
         var line = JsonSerializer.Serialize(new { type = "state", controls });
 
-        await _sendLock.WaitAsync(cancellationToken);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(TimeSpan.FromMilliseconds(500));
+        await _sendLock.WaitAsync(timeout.Token);
         try
         {
-            await _writer.WriteLineAsync(line.AsMemory(), cancellationToken);
-            await _writer.FlushAsync(cancellationToken);
+            if (!IsAvailable) throw new InvalidOperationException("The output helper has stopped.");
+            await _writer.WriteLineAsync(line.AsMemory(), timeout.Token);
+            await _writer.FlushAsync(timeout.Token);
+            var response = await _process.StandardOutput.ReadLineAsync(timeout.Token);
+            using var ack = JsonDocument.Parse(response ?? throw new IOException("Output helper closed its response pipe."));
+            if (!ack.RootElement.TryGetProperty("type", out var type) || type.GetString() != "applied" ||
+                !ack.RootElement.TryGetProperty("ok", out var ok) || !ok.GetBoolean())
+                throw new IOException("Output helper did not acknowledge the controller state.");
         }
         finally
         {
@@ -305,26 +317,34 @@ public sealed class HidMaestroOutputSink : IControllerOutputSink
 
     public async ValueTask DisposeAsync()
     {
-        if (_disposed)
-            return;
-        _disposed = true;
-
+        await _sendLock.WaitAsync();
         try
         {
+            if (_disposed) return;
+            _disposed = true;
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3));
             if (!_process.HasExited)
             {
-                await _writer.WriteLineAsync("{\"type\":\"stop\"}");
-                await _writer.FlushAsync();
-                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-                try { await _process.WaitForExitAsync(timeout.Token); }
-                catch (OperationCanceledException) { _process.Kill(entireProcessTree: true); }
+                try
+                {
+                    await _writer.WriteLineAsync("{\"type\":\"stop\"}".AsMemory(), timeout.Token);
+                    await _writer.FlushAsync(timeout.Token);
+                    await _process.WaitForExitAsync(timeout.Token);
+                }
+                catch (Exception ex) when (ex is IOException or OperationCanceledException or InvalidOperationException)
+                {
+                    if (!_process.HasExited) _process.Kill(entireProcessTree: true);
+                }
             }
         }
         finally
         {
-            _sendLock.Dispose();
-            _writer.Dispose();
-            _process.Dispose();
+            if (_disposed)
+            {
+                // Avoid synchronous StreamWriter.Dispose flushing a blocked pipe.
+                _process.Dispose();
+            }
+            _sendLock.Release();
         }
     }
 }

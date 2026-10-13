@@ -19,7 +19,7 @@ public partial class MainWindow : Window
 
         InitializeComponent();
         Loaded += OnLoaded;
-        Closed += OnClosed;
+        Closing += OnClosing;
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -149,8 +149,17 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void OnClosed(object? sender, EventArgs e)
+    private bool _shutdownStarted;
+    private bool _shutdownComplete;
+
+    private async void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
-        await _controllerHubService.DisposeAsync();
+        if (_shutdownComplete) return;
+        e.Cancel = true;
+        if (_shutdownStarted) return;
+        _shutdownStarted = true;
+        IsEnabled = false;
+        try { await _controllerHubService.DisposeAsync(); }
+        finally { _shutdownComplete = true; Close(); }
     }
 }

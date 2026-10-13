@@ -56,6 +56,10 @@ jobs:
         shell: pwsh
         run: dotnet build .\src\DKControllerOutputHost\DKControllerOutputHost.csproj -c Release --no-restore
 
+      - name: Controller reliability regression tests
+        shell: pwsh
+        run: dotnet run --project .\tests\ControllerReliability.Tests\ControllerReliability.Tests.csproj -c Release
+
       - name: Publish controller output host
         shell: pwsh
         run: >-
