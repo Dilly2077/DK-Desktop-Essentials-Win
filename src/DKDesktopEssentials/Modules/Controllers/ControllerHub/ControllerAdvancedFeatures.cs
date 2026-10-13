@@ -13,7 +13,7 @@ public sealed class ControllerAdvancedFeatures : IAsyncDisposable
     public ControllerAdvancedFeatures(IControllerProvider devices, IAdvancedControllerBackend? backend = null)
     {
         _devices = devices ?? throw new ArgumentNullException(nameof(devices));
-        _backend = backend ?? new UnsupportedAdvancedControllerBackend();
+        _backend = backend ?? new WindowsStandardFeedbackBackend(devices);
     }
 
     public IReadOnlyList<AdvancedControllerCapabilities> ListCapabilities() =>
@@ -53,6 +53,9 @@ public sealed class ControllerAdvancedFeatures : IAsyncDisposable
                 "No supported feedback feature for this controller/backend."));
         return _backend.SetFeedbackAsync(deviceId, request, cancellationToken);
     }
+
+    public ValueTask<ControllerFeedbackResult> StopFeedbackAsync(string deviceId) =>
+        _backend.StopFeedbackAsync(deviceId);
 
     public ValueTask DisposeAsync() => _backend.DisposeAsync();
 }
