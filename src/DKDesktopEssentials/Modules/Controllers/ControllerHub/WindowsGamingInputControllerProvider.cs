@@ -10,11 +10,10 @@ public sealed class WindowsGamingInputControllerProvider : IControllerProvider
 
     public WindowsGamingInputControllerProvider()
     {
-        foreach (var controller in RawGameController.RawGameControllers)
-            TrackController(controller, raiseEvent: false);
-
         RawGameController.RawGameControllerAdded += OnControllerAdded;
         RawGameController.RawGameControllerRemoved += OnControllerRemoved;
+        foreach (var controller in RawGameController.RawGameControllers)
+            TrackController(controller, raiseEvent: false);
     }
 
     public event EventHandler<ControllerDeviceEventArgs>? DeviceAdded;
@@ -77,7 +76,10 @@ public sealed class WindowsGamingInputControllerProvider : IControllerProvider
 
         lock (_gate)
         {
-            if (_controllers.Remove(controller.NonRoamableId))
+            if (_disposed) return;
+            // A delayed removal of an old connection must not erase its replacement.
+            if (_controllers.TryGetValue(controller.NonRoamableId, out var current) &&
+                Equals(current, controller) && _controllers.Remove(controller.NonRoamableId))
                 descriptor = CreateDescriptor(controller);
         }
 
@@ -91,10 +93,11 @@ public sealed class WindowsGamingInputControllerProvider : IControllerProvider
 
         lock (_gate)
         {
-            if (_controllers.ContainsKey(controller.NonRoamableId))
+            if (_disposed || string.IsNullOrWhiteSpace(controller.NonRoamableId)) return;
+            if (_controllers.TryGetValue(controller.NonRoamableId, out var current) && Equals(current, controller))
                 return;
 
-            _controllers.Add(controller.NonRoamableId, controller);
+            _controllers[controller.NonRoamableId] = controller;
             descriptor = CreateDescriptor(controller);
         }
 

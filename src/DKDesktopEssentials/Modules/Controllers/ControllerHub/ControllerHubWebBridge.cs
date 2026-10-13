@@ -296,7 +296,7 @@ public sealed class ControllerHubWebBridge
             }
 
             case "controllerHub:stopOutputSession":
-                await _service.StopOutputSessionAsync();
+                await _service.StopOutputSessionAsync(ReadString(payload, "deviceId"));
                 return _service.GetOutputSessionStatus();
 
             default:
