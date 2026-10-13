@@ -82,13 +82,13 @@ This module is the shared input/remapping engine for DK Desktop Essentials. It r
 - Touchpad state retains raw 0..1 coordinates, pressure and contact data for UI/inspection. When touch X/Y is used as a remapping source it is converted to a centred signed axis, with Y oriented like a gamepad stick and zero output when no finger is touching.
 - Advanced controls are first-class profile sources, so gyro, accelerometer and touch data can feed ordinary bindings, value zones, chords, 2D stick transforms and radial mappings.
 - Profiles explicitly store an `AdvancedDeviceId`; DK Desktop does not guess between multiple identical controllers. Vendor/product compatibility is checked before linking an advanced device to a profile.
-- Standard rumble, trigger-rumble, RGB-light and player-LED actions are exposed only when SDL reports the corresponding capability.
-- DualSense and DualSense Edge adaptive-trigger output uses SDL's device-specific effect channel with explicit Off, Resistance and Vibration modes. Calls still return failure when the active transport/driver rejects the effect.
+- Standard rumble, trigger-rumble, RGB-light and player-LED actions are exposed only when SDL reports the corresponding capability. Motor levels must be finite 0..1 values and rumble commands are limited to five seconds.
+- DualSense and DualSense Edge adaptive-trigger output uses SDL's device-specific effect channel with explicit Off, Resistance and Vibration modes. Controller model identifies **potential** support only: SDL exposes no explicit adaptive-trigger capability flag. Calls return false when the active transport/driver rejects the effect; user-visible success is not assumed.
 - Advanced feature installation/removal, device enumeration, live advanced-state reads, profile linking and hardware effects are exposed through the local WebView bridge.
 
 ### Advanced-feature limitations
 
-Capability support depends on the physical controller, connection mode, Windows driver and SDL backend. DK Desktop does not claim that a feature is available merely because a controller family commonly has it. CI verifies compilation and packaging but cannot certify physical gyro, touchpad, rumble, LED or adaptive-trigger behaviour without hardware testing.
+Capability support depends on the physical controller, connection mode, Windows driver and SDL backend. SDL3 3.4.16 is deliberately release-pinned and hash-verified; it is not necessarily the latest SDL3 version. DK Desktop does not claim that a feature is available merely because a controller family commonly has it. CI verifies compilation and packaging but cannot certify physical gyro, touchpad, rumble, LED or adaptive-trigger behaviour without hardware testing.
 
 ### Physical-controller hiding
 
