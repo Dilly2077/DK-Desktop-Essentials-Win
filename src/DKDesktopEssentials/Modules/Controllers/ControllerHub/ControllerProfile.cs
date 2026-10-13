@@ -31,6 +31,7 @@ public sealed class ControllerProfile
     public ControllerOutputMode OutputMode { get; set; } = ControllerOutputMode.None;
     public bool PassThroughUnmappedControls { get; set; } = true;
     public List<ControlTuning> Tuning { get; set; } = new();
+    public ControllerAdvancedMappingSettings AdvancedMappings { get; set; } = new();
     public List<ControllerLayer> Layers { get; set; } = new() { ControllerLayer.CreateBaseLayer() };
 
     public static ControllerProfile CreateDefault(ControllerDeviceDescriptor? device = null)
