@@ -235,8 +235,8 @@ public sealed class Sdl3AdvancedControllerProvider : IControllerAdvancedFeatureP
     {
         lock (_gate)
         {
-            if (!TryGetDevice(backendId, out var device) ||
-                !device.Descriptor.Capabilities.HasFlag(ControllerFeatureCapability.Rumble))
+            if (!IsValidUnit(lowFrequency) || !IsValidUnit(highFrequency) ||
+                !deviceOrCapability(backendId, ControllerFeatureCapability.Rumble, out var device))
                 return false;
 
             return _api!.RumbleGamepad(
@@ -251,8 +251,8 @@ public sealed class Sdl3AdvancedControllerProvider : IControllerAdvancedFeatureP
     {
         lock (_gate)
         {
-            if (!TryGetDevice(backendId, out var device) ||
-                !device.Descriptor.Capabilities.HasFlag(ControllerFeatureCapability.TriggerRumble))
+            if (!IsValidUnit(left) || !IsValidUnit(right) ||
+                !deviceOrCapability(backendId, ControllerFeatureCapability.TriggerRumble, out var device))
                 return false;
 
             return _api!.RumbleTriggers(
@@ -296,14 +296,31 @@ public sealed class Sdl3AdvancedControllerProvider : IControllerAdvancedFeatureP
 
         lock (_gate)
         {
-            if (!TryGetDevice(backendId, out var device) ||
-                !device.Descriptor.Capabilities.HasFlag(ControllerFeatureCapability.AdaptiveTriggers))
+            if ((state.Left is null && state.Right is null) ||
+                (state.Left is not null && !ValidTriggerEffect(state.Left)) ||
+                (state.Right is not null && !ValidTriggerEffect(state.Right)) ||
+                !deviceOrCapability(backendId, ControllerFeatureCapability.AdaptiveTriggers, out var device))
                 return false;
 
             var packet = BuildDualSenseTriggerPacket(state);
             return _api!.SendEffect(device.Handle, packet);
         }
     }
+
+    private bool deviceOrCapability(string backendId, ControllerFeatureCapability capability, out OpenGamepad device)
+    {
+        return TryGetDevice(backendId, out device) &&
+            device.Descriptor.Capabilities.HasFlag(capability);
+    }
+
+    private static bool IsValidUnit(double value) =>
+        double.IsFinite(value) && value is >= 0d and <= 1d;
+
+    private static bool ValidTriggerEffect(ControllerAdaptiveTriggerEffect effect) =>
+        Enum.IsDefined(effect.Mode) &&
+        IsValidUnit(effect.StartPosition) &&
+        IsValidUnit(effect.Strength) &&
+        IsValidUnit(effect.Frequency);
 
     private bool TryGetDevice(string backendId, out OpenGamepad device)
     {
@@ -429,6 +446,9 @@ public sealed class Sdl3AdvancedControllerProvider : IControllerAdvancedFeatureP
             if (_api.GetBooleanProperty(properties, PropPlayerLed, false)) capabilities |= ControllerFeatureCapability.PlayerLed;
         }
 
+        // SDL does not report an adaptive-trigger capability property. This flag
+        // identifies a candidate Sony model only; transport/driver may reject the
+        // effect. The API returns false when SDL_SendGamepadEffect fails.
         if (vendor == SonyVendorId && product is DualSenseProductId or DualSenseEdgeProductId)
             capabilities |= ControllerFeatureCapability.AdaptiveTriggers;
 
@@ -527,7 +547,8 @@ public sealed class Sdl3AdvancedControllerProvider : IControllerAdvancedFeatureP
         (ushort)Math.Round(Math.Clamp(value, 0d, 1d) * ushort.MaxValue);
 
     private static uint ToDurationMilliseconds(TimeSpan duration) =>
-        (uint)Math.Clamp(Math.Round(Math.Max(0d, duration.TotalMilliseconds)), 0d, uint.MaxValue);
+        (uint)Math.Clamp(Math.Round(double.IsFinite(duration.TotalMilliseconds)
+            ? duration.TotalMilliseconds : 0d), 0d, 5000d);
 
     private static string? PtrToUtf8(nint pointer) =>
         pointer == 0 ? null : Marshal.PtrToStringUTF8(pointer);
