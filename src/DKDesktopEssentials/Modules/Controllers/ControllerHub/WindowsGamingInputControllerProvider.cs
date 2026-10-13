@@ -77,7 +77,9 @@ public sealed class WindowsGamingInputControllerProvider : IControllerProvider
         lock (_gate)
         {
             if (_disposed) return;
-            if (_controllers.Remove(controller.NonRoamableId))
+            // A delayed removal of an old connection must not erase its replacement.
+            if (_controllers.TryGetValue(controller.NonRoamableId, out var current) &&
+                Equals(current, controller) && _controllers.Remove(controller.NonRoamableId))
                 descriptor = CreateDescriptor(controller);
         }
 
@@ -92,10 +94,10 @@ public sealed class WindowsGamingInputControllerProvider : IControllerProvider
         lock (_gate)
         {
             if (_disposed || string.IsNullOrWhiteSpace(controller.NonRoamableId)) return;
-            if (_controllers.ContainsKey(controller.NonRoamableId))
+            if (_controllers.TryGetValue(controller.NonRoamableId, out var current) && Equals(current, controller))
                 return;
 
-            _controllers.Add(controller.NonRoamableId, controller);
+            _controllers[controller.NonRoamableId] = controller;
             descriptor = CreateDescriptor(controller);
         }
 

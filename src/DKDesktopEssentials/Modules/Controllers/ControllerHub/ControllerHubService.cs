@@ -78,22 +78,22 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         await _legacyOutputGate.WaitAsync(cancellationToken);
         try
         {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-        if (!TryReadMappedState(deviceId, profile, out var state) || state is null)
-        {
-            await _outputSink.SendAsync(new MappedControllerState(), cancellationToken);
-            _mappingEngine.ResetRuntimeState();
-            return false;
-        }
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            if (!TryReadMappedState(deviceId, profile, out var state) || state is null)
+            {
+                await _outputSink.SendAsync(new MappedControllerState(), cancellationToken);
+                _mappingEngine.ResetRuntimeState();
+                return false;
+            }
 
-        if (profile.OutputMode is ControllerOutputMode.None or ControllerOutputMode.PassThroughOnly)
+            if (profile.OutputMode is ControllerOutputMode.None or ControllerOutputMode.PassThroughOnly)
+                return true;
+
+            if (!_outputSink.IsAvailable)
+                return false;
+
+            await _outputSink.SendAsync(state, cancellationToken);
             return true;
-
-        if (!_outputSink.IsAvailable)
-            return false;
-
-        await _outputSink.SendAsync(state, cancellationToken);
-        return true;
         }
         finally { _legacyOutputGate.Release(); }
     }
@@ -118,13 +118,13 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         await _outputSessionGate.WaitAsync(cancellationToken);
         try
         {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-        await StopSessionsCoreAsync();
-        var status = await _advancedPackageManager.InstallAsync(cancellationToken);
-        _advancedProvider.Dispose();
-        _advancedProvider = new Sdl3AdvancedControllerProvider(_advancedPackageManager);
-        _ = _advancedProvider.IsAvailable;
-        return GetAdvancedFeatureBackendStatus() with { Message = status.Message ?? _advancedProvider.LastError };
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            await StopSessionsCoreAsync();
+            var status = await _advancedPackageManager.InstallAsync(cancellationToken);
+            _advancedProvider.Dispose();
+            _advancedProvider = new Sdl3AdvancedControllerProvider(_advancedPackageManager);
+            _ = _advancedProvider.IsAvailable;
+            return GetAdvancedFeatureBackendStatus() with { Message = status.Message ?? _advancedProvider.LastError };
         }
         finally { _outputSessionGate.Release(); }
     }
@@ -134,11 +134,11 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         await _outputSessionGate.WaitAsync(cancellationToken);
         try
         {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-        await StopSessionsCoreAsync();
-        _advancedProvider.Dispose();
-        await _advancedPackageManager.RemoveAsync(cancellationToken);
-        _advancedProvider = new Sdl3AdvancedControllerProvider(_advancedPackageManager);
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            await StopSessionsCoreAsync();
+            _advancedProvider.Dispose();
+            await _advancedPackageManager.RemoveAsync(cancellationToken);
+            _advancedProvider = new Sdl3AdvancedControllerProvider(_advancedPackageManager);
         }
         finally { _outputSessionGate.Release(); }
     }
@@ -240,24 +240,24 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         await _outputSessionGate.WaitAsync(cancellationToken);
         try
         {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-        if (mode is not ControllerOutputMode.VirtualXbox360 and not ControllerOutputMode.VirtualDualShock4)
-            throw new ArgumentOutOfRangeException(nameof(mode), mode, "Select Xbox 360 or DualShock 4 virtual output.");
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            if (mode is not ControllerOutputMode.VirtualXbox360 and not ControllerOutputMode.VirtualDualShock4)
+                throw new ArgumentOutOfRangeException(nameof(mode), mode, "Select Xbox 360 or DualShock 4 virtual output.");
 
-        var key = string.IsNullOrWhiteSpace(identityKey)
-            ? "dk-desktop-essentials:primary"
-            : identityKey.Trim();
+            var key = string.IsNullOrWhiteSpace(identityKey)
+                ? "dk-desktop-essentials:primary"
+                : identityKey.Trim();
 
-        var sink = await HidMaestroOutputSink.CreateAsync(mode, _outputPackageManager, key, cancellationToken);
-        try
-        {
-            await SetOutputSinkAsync(sink);
-        }
-        catch
-        {
-            await sink.DisposeAsync();
-            throw;
-        }
+            var sink = await HidMaestroOutputSink.CreateAsync(mode, _outputPackageManager, key, cancellationToken);
+            try
+            {
+                await SetOutputSinkAsync(sink);
+            }
+            catch
+            {
+                await sink.DisposeAsync();
+                throw;
+            }
         }
         finally { _outputSessionGate.Release(); }
     }
@@ -374,19 +374,19 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         await _legacyOutputGate.WaitAsync();
         try
         {
-        var previous = _outputSink;
-        if (_disposed && outputSink is not NoOutputSink)
-            throw new ObjectDisposedException(nameof(ControllerHubService));
-        if (ReferenceEquals(previous, outputSink)) return;
-        _outputSink = outputSink;
-        _mappingEngine.ResetRuntimeState();
-        try
-        {
-            using var timeout = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
-            await previous.SendAsync(new MappedControllerState(), timeout.Token);
-        }
-        catch (Exception) { /* A failed helper still must be disposed/killed. */ }
-        finally { await previous.DisposeAsync(); }
+            var previous = _outputSink;
+            if (_disposed && outputSink is not NoOutputSink)
+                throw new ObjectDisposedException(nameof(ControllerHubService));
+            if (ReferenceEquals(previous, outputSink)) return;
+            _outputSink = outputSink;
+            _mappingEngine.ResetRuntimeState();
+            try
+            {
+                using var timeout = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+                await previous.SendAsync(new MappedControllerState(), timeout.Token);
+            }
+            catch (Exception) { /* A failed helper still must be disposed/killed. */ }
+            finally { await previous.DisposeAsync(); }
         }
         finally { _legacyOutputGate.Release(); }
     }
@@ -397,8 +397,11 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         foreach (var session in _sessions.Values) session.Reset();
     }
 
-    private void OnDeviceAdded(object? sender, ControllerDeviceEventArgs e) =>
+    private void OnDeviceAdded(object? sender, ControllerDeviceEventArgs e)
+    {
+        if (_sessions.TryGetValue(e.Device.DeviceId, out var session)) session.Reset();
         DeviceAdded?.Invoke(this, e);
+    }
 
     private void OnDeviceRemoved(object? sender, ControllerDeviceEventArgs e)
     {
@@ -412,18 +415,18 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         await _outputSessionGate.WaitAsync();
         try
         {
-        if (_disposed)
-            return;
+            if (_disposed)
+                return;
 
-        _disposed = true;
-        _provider.DeviceAdded -= OnDeviceAdded;
-        _provider.DeviceRemoved -= OnDeviceRemoved;
-        try { await StopSessionsCoreAsync(); }
-        finally
-        {
-            try { _advancedProvider.Dispose(); }
-            finally { _provider.Dispose(); }
-        }
+            _disposed = true;
+            _provider.DeviceAdded -= OnDeviceAdded;
+            _provider.DeviceRemoved -= OnDeviceRemoved;
+            try { await StopSessionsCoreAsync(); }
+            finally
+            {
+                try { _advancedProvider.Dispose(); }
+                finally { _provider.Dispose(); }
+            }
         }
         finally { _outputSessionGate.Release(); }
     }
