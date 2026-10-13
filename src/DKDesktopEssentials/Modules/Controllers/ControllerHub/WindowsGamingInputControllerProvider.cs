@@ -6,6 +6,7 @@ public sealed class WindowsGamingInputControllerProvider : IControllerProvider
 {
     private readonly object _gate = new();
     private readonly Dictionary<string, RawGameController> _controllers = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _vibratingDevices = new(StringComparer.Ordinal);
     private bool _disposed;
 
     public WindowsGamingInputControllerProvider()
@@ -68,6 +69,40 @@ public sealed class WindowsGamingInputControllerProvider : IControllerProvider
         }
     }
 
+    public bool CanSetStandardVibration(string deviceId)
+    {
+        lock (_gate)
+        {
+            try
+            {
+                return !_disposed && _controllers.TryGetValue(deviceId, out var raw) &&
+                    Gamepad.FromGameController(raw) is not null;
+            }
+            catch { return false; } // Device may disconnect during lookup.
+        }
+    }
+
+    public bool TrySetStandardVibration(string deviceId, GamepadVibration vibration)
+    {
+        lock (_gate)
+        {
+            if (_disposed || !_controllers.TryGetValue(deviceId, out var raw)) return false;
+            try
+            {
+                var gamepad = Gamepad.FromGameController(raw);
+                if (gamepad is null) return false;
+                gamepad.Vibration = vibration;
+                if (vibration.LeftMotor == 0d && vibration.RightMotor == 0d &&
+                    vibration.LeftTrigger == 0d && vibration.RightTrigger == 0d)
+                    _vibratingDevices.Remove(deviceId);
+                else
+                    _vibratingDevices.Add(deviceId);
+                return true;
+            }
+            catch { return false; } // Disconnect/driver failure.
+        }
+    }
+
     private void OnControllerAdded(object? sender, RawGameController controller) =>
         TrackController(controller, raiseEvent: true);
 
@@ -78,7 +113,14 @@ public sealed class WindowsGamingInputControllerProvider : IControllerProvider
         lock (_gate)
         {
             if (_controllers.Remove(controller.NonRoamableId))
+            {
+                if (_vibratingDevices.Remove(controller.NonRoamableId))
+                {
+                    try { var gamepad = Gamepad.FromGameController(controller); if (gamepad is not null) gamepad.Vibration = new GamepadVibration(); }
+                    catch { /* Controller already disconnected. */ }
+                }
                 descriptor = CreateDescriptor(controller);
+            }
         }
 
         if (descriptor is not null)
@@ -177,6 +219,14 @@ public sealed class WindowsGamingInputControllerProvider : IControllerProvider
         RawGameController.RawGameControllerRemoved -= OnControllerRemoved;
 
         lock (_gate)
+        {
+            foreach (var id in _vibratingDevices)
+            {
+                try { if (_controllers.TryGetValue(id, out var raw)) { var gamepad = Gamepad.FromGameController(raw); if (gamepad is not null) gamepad.Vibration = new GamepadVibration(); } }
+                catch { /* Teardown must not crash on disconnect. */ }
+            }
+            _vibratingDevices.Clear();
             _controllers.Clear();
+        }
     }
 }
