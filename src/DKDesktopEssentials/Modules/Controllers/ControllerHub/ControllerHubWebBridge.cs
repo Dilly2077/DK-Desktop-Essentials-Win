@@ -298,11 +298,13 @@ public sealed class ControllerHubWebBridge
                 return _service.GetOutputSessionStatus();
 
             case "controllerHub:repairOutputBackend":
+                RequireGlobalCleanupAcknowledgment(payload);
                 await _service.RepairOutputBackendAsync(cancellationToken);
                 return _service.GetOutputSessionStatus();
 
             case "controllerHub:removeOutputBackend":
             {
+                RequireGlobalCleanupAcknowledgment(payload);
                 var removePackage = ReadBoolean(payload, "removeProviderPackage");
                 await _service.RemoveOutputBackendAsync(removePackage, cancellationToken);
                 return _service.GetOutputSessionStatus();
@@ -379,6 +381,12 @@ public sealed class ControllerHubWebBridge
             return null;
 
         return value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+    }
+
+    private static void RequireGlobalCleanupAcknowledgment(JsonElement payload)
+    {
+        if (!ReadBoolean(payload, "confirmGlobalCleanup"))
+            throw new ArgumentException("HIDMaestro maintenance may remove virtual controllers created by other applications. Explicit global-cleanup acknowledgment is required.");
     }
 
     private static string? ReadDeviceIdForStop(JsonElement payload)
