@@ -1,0 +1,388 @@
+# DK's Desktop Essentials — Category 7: Downloads & Transfers
+
+<row align="center" gap={2} wrap="wrap">
+  <badge color="info">Proposed development roadmap</badge>
+  <text color="secondary" size="xs">14 October 2026 · Windows 11 · Local-first</text>
+</row>
+
+I recommend introducing **Downloads & Transfers as the seventh category**, with six modules developed incrementally. The first priority is a fully functional, free, open-source alternative to <Entity category="software" value="Internet Download Manager" disambig="Windows download acceleration and management software"/> (IDM).
+
+The goal is not simply to recreate IDM's interface. We want its useful functionality, including accelerated downloading, browser integration, video downloading, scheduling and file management, without licensing restrictions, advertising, accounts or telemetry.
+
+The existing Network & Device Bridge category will retain local device-to-device file transfers. This new category will focus on downloading content from the internet.
+
+## 1. Category overview
+
+<box border radius="xl" padding={3} gap={3}>
+  <text color="secondary" weight="medium" size="xs">PROPOSED MODULES</text>
+  <grid columns={3} gap={2}>
+    {#each [{v:"6",l:"Modules"},{v:"30",l:"Dev slices"},{v:"37",l:"Suite total"}] as k}
+      <grid-item>
+        <box background="surface-secondary" radius="lg" padding={3} gap={1} align="center">
+          <title size="2xl" color="default" tabularNums>{k.v}</title>
+          <caption>{k.l}</caption>
+        </box>
+      </grid-item>
+    {/each}
+  </grid>
+  <text size="xs" color="secondary">37 is the proposed new suite total, counting six additions to the original 31 modules. The sixth new module is optional for the initial release.</text>
+</box>
+
+| # | Module | Purpose | Priority |
+|---|---|---|---|
+| 32 | **Download Manager Core** | Fast, reliable, resumable downloads | Essential |
+| 33 | **Browser Integration** | Capture downloads from Chrome, Edge, Firefox and Zen | High |
+| 34 | **Media & Batch Downloader** | Videos, audio, playlists, multiple links and website assets | High |
+| 35 | **Scheduler & Automation** | Queues, speed limits, scheduling, automatic rules | High |
+| 36 | **Download Library & Security** | Organisation, history, verification and safety | Essential |
+| 37 | **Torrents & Advanced Protocols** | Magnet links, torrents, Metalink and specialist transfers | Optional |
+
+Although Module 36 appears fifth, its basic safety features must be implemented alongside Module 32.
+
+## 2. Technical approach
+
+We should reuse established open-source download engines where practical, rather than writing a complete network stack from scratch.
+
+| Technology | Proposed role |
+|---|---|
+| <Entity category="software" value="aria2" disambig="Open-source command-line multi-protocol downloader"/> | Segmented downloading, resuming, connection management and advanced protocols |
+| <Entity category="software" value="yt-dlp" disambig="Open-source video and audio downloading utility"/> | Extracting supported media streams and format information |
+| <Entity category="software" value="FFmpeg" disambig="Open-source multimedia processing framework"/> | Merging compatible media streams and media post-processing |
+| SQLite | Local download database, states, schedules and history |
+| Browser WebExtensions | Browser interaction, opt-in download capture and native messaging |
+| Windows security facilities | File scanning, process isolation and safe file operations |
+
+aria2 already supports segmented HTTP/HTTPS downloads and several other protocols, including BitTorrent and Metalink. IDM itself provides resuming, browser interception, scheduling and site grabbing. These give us a realistic baseline. <Cite refs={["turn792684search4","turn792684search9"]}/>
+
+The important engineering decision is to **use one shared download engine and persistent job database**, with each module adding capabilities to that foundation. We should not build six independent applications.
+
+Our existing project requirements remain unchanged: local processing, open-source code, no telemetry or mandatory accounts, and external network connections only for user-requested downloads and explicitly approved functions such as updates.
+
+---
+
+## 3. Development slices for each module
+
+Each slice should produce an independently reviewable result. Completing all backend slices does not automatically mean the module has passed UI, reliability or Windows acceptance testing.
+
+**Ownership terminology:** Chat means I can develop the specification, algorithms, schemas, test cases or reviewable code in this conversation. Codex means the work requires substantial repository implementation, execution, debugging or Windows integration. Hybrid means design and smaller components here, then implementation and validation in Codex.
+
+### Module 32 — Download Manager Core
+
+<row align="center" gap={2} wrap="wrap">
+  <badge>6 slices</badge>
+  <text color="secondary" size="sm">Highest priority · The foundation of the entire category</text>
+</row>
+
+**Goal:** A capable download manager that works independently of browser extensions, using a pasted URL.
+
+| Slice | Development work | Owner |
+|---|---|---|
+| 32.1 | Define job states, persistent metadata, queue behaviour, error codes and download APIs | **Chat** |
+| 32.2 | Evaluate and integrate aria2 or another suitable native download engine, using the existing application architecture | **Codex** |
+| 32.3 | Implement ordinary HTTP/HTTPS downloads, folder selection, progress, speed and remaining-time estimates | **Codex** |
+| 32.4 | Implement parallel segments, pause/resume, recovery after shutdown and protection against changed remote files | **Codex** |
+| 32.5 | Implement persistent queues, simultaneous downloads, retry/backoff logic, cancellation and disk-space checks | **Codex** |
+| 32.6 | Create the usable download dashboard and run automated plus manual Windows acceptance tests | **Hybrid** |
+
+For Slice 32.1, I recommend defining the standard states as `Queued`, `Resolving`, `Downloading`, `Paused`, `Retrying`, `Verifying`, `Completed`, `Failed` and `Cancelled`.
+
+The engine must verify whether a server actually supports partial downloads. A server may ignore range requests, and a resumed file may have changed since its original transfer. Correct handling of HTTP 200, 206 and 416 responses matters more than aggressive connection counts. <Cite ref="turn432359search0"/>
+
+<box border radius="lg" padding={3} gap={2}>
+  **Module completion criteria**
+
+  A user can paste a direct download URL, select a destination, begin downloading, pause, resume, close Desktop Essentials, reopen it and safely continue the same transfer where the server permits.
+
+  The interface must show real progress and errors. A completed file must be verified for expected length and, where available, a trusted checksum before being marked successful.
+</box>
+
+### Module 33 — Browser Integration
+
+<row align="center" gap={2} wrap="wrap">
+  <badge>5 slices</badge>
+  <text color="secondary" size="sm">High priority · IDM-style browser integration</text>
+</row>
+
+This module is especially important because it determines whether our download manager feels like a practical IDM replacement rather than an application that requires manually pasting every URL.
+
+| Slice | Development work | Owner |
+|---|---|---|
+| 33.1 | Design browser capture rules, permission settings and native-message schemas | **Chat** |
+| 33.2 | Develop the secure Windows native messaging bridge between browser extensions and Desktop Essentials | **Codex** |
+| 33.3 | Build and test the Chrome/Edge extension, including right-click Download with DK and optional capture | **Codex** |
+| 33.4 | Build the Firefox/Zen-compatible extension and verify its browser-specific behaviour | **Codex** |
+| 33.5 | Test integration, optional automatic interception, credential handling, browser restarts and extension removal | **Codex** |
+
+Chrome documents native messaging as a supported way for extensions to communicate with installed desktop applications. Zen is based on Firefox and uses its extension ecosystem, so a Firefox-compatible implementation is the appropriate starting point. <Cite refs={["turn541636search3","turn541636search5"]}/>
+
+I recommend a staged release:
+
+- **First:** Right-click a link and select *Download with DK*.
+- **Second:** Optional automatic interception of supported browser downloads.
+- **Third:** Advanced authenticated download handling, where supported and explicitly authorised.
+
+Automatic browser interception must remain optional. Website logins, cookies, temporary signed URLs and browser permissions make universal interception unrealistic. Our extension should also avoid requesting unrestricted website access unless a feature genuinely needs it.
+
+### Module 34 — Media & Batch Downloader
+
+<row align="center" gap={2} wrap="wrap">
+  <badge>5 slices</badge>
+  <text color="secondary" size="sm">High priority · Videos, audio and bulk downloads</text>
+</row>
+
+**Goal:** Support ordinary downloadable videos, audio, playlists, image collections and multiple URLs from websites where the user is authorised to access and save the content.
+
+| Slice | Development work | Owner |
+|---|---|---|
+| 34.1 | Design URL classification, media metadata, format selection and quality presets | **Chat** |
+| 34.2 | Integrate yt-dlp for supported media sources and implement extraction error handling | **Codex** |
+| 34.3 | Add video/audio quality selection, subtitles and FFmpeg-based stream merging where needed | **Codex** |
+| 34.4 | Build bulk-link import and an optional website asset grabber with crawl limits, filters and previews | **Hybrid** |
+| 34.5 | Create the media download UI and test extraction, media metadata, cancellation and playback compatibility | **Codex** |
+
+Planned media controls include selectable resolution, frame rate, codec/format where supported, audio-only downloads, subtitle selection, filename templates and batch processing.
+
+The website asset grabber would be inspired by IDM's Site Grabber, which supports filtered downloads of website images, audio, documents and selected pages. <Cite ref="turn792684search5"/>
+
+**Limitation:** Some media is protected by DRM, licensing restrictions or platform access controls. This module will not attempt to defeat DRM or security protections. Site support also changes over time, so media extractors must be independently replaceable and report unsupported sources clearly.
+
+### Module 35 — Scheduler & Automation
+
+<row align="center" gap={2} wrap="wrap">
+  <badge>5 slices</badge>
+  <text color="secondary" size="sm">High priority · Automation without cloud dependency</text>
+</row>
+
+| Slice | Development work | Owner |
+|---|---|---|
+| 35.1 | Design scheduling policies, queue-priority rules, time windows and conflict resolution | **Chat** |
+| 35.2 | Implement persistent scheduling, scheduled starts, stops and recovery after application restart | **Codex** |
+| 35.3 | Add per-download and global speed limits, connection limits and configurable concurrency | **Codex** |
+| 35.4 | Implement automatic file-organisation rules, filename templates and optional duplicate handling | **Hybrid** |
+| 35.5 | Implement local notifications, approved completion actions, UI controls and reliability testing | **Codex** |
+
+Examples of intended functionality:
+
+- Schedule large downloads overnight.
+- Limit bandwidth while gaming or studying.
+- Automatically move completed files into designated folders.
+- Pause downloads while a particular application is running.
+- Notify the user when a queue is complete.
+
+We should eventually integrate the scheduler with the existing Desktop Essentials Macro Engine and Performance Profiles instead of inventing separate automation systems.
+
+For safety, computer shutdown, custom script execution and file removal must always be opt-in.
+
+### Module 36 — Download Library & Security
+
+<row align="center" gap={2} wrap="wrap">
+  <badge>5 slices</badge>
+  <text color="secondary" size="sm">Essential · Basic protection begins with Module 32</text>
+</row>
+
+| Slice | Development work | Owner |
+|---|---|---|
+| 36.1 | Design local history, file categories, tags, verification metadata and retention settings | **Chat** |
+| 36.2 | Implement the searchable download library, history storage, sorting, filtering and export | **Codex** |
+| 36.3 | Develop checksum-verification logic and integrate file-size/hash validation into the download lifecycle | **Hybrid** |
+| 36.4 | Implement Windows security integration, safe temporary files, path validation and malicious-file handling | **Codex** |
+| 36.5 | Build library controls, privacy settings, deletion workflows and run a security/privacy audit | **Codex** |
+
+The default security model should include:
+
+- Downloads written to a temporary location until complete.
+- Safe filename/path handling without overwriting unrelated files.
+- No automatic execution of downloaded applications.
+- Optional user-visible Microsoft Defender scans, with accurate handling of scan results and failures.
+- Local history and logs, with sensitive URLs and credentials excluded or redacted.
+- User-controlled data retention and deletion.
+
+Microsoft documents local file scanning through Defender's command-line facilities, although availability and permissions must be checked on the actual Windows installation. <Cite ref="turn432359search1"/>
+
+This module should also provide the interface for viewing downloaded files, opening their folders, examining their sources and checking verification results.
+
+### Module 37 — Torrents & Advanced Protocols
+
+<row align="center" gap={2} wrap="wrap">
+  <badge>4 slices</badge>
+  <text color="secondary" size="sm">Optional · Develop after the IDM-equivalent experience works</text>
+</row>
+
+| Slice | Development work | Owner |
+|---|---|---|
+| 37.1 | Define supported protocols, required permissions, privacy settings and engine boundaries | **Chat** |
+| 37.2 | Integrate an opt-in BitTorrent backend, magnet links and selected additional protocols | **Codex** |
+| 37.3 | Add file selection, transfer progress, peer information, seeding controls and per-protocol settings | **Codex** |
+| 37.4 | Test transfer integrity, network binding, pause/restart behaviour, peer privacy and distribution licences | **Codex** |
+
+This could eventually include BitTorrent, Metalink and SFTP transfers. However, it should not duplicate the LAN File Transfer module.
+
+One privacy consideration is that BitTorrent inherently communicates with peers and can expose the user's IP address. This is materially different from normal HTTPS downloads. Torrent functionality should therefore be disabled by default and clearly explain its network behaviour.
+
+---
+
+## 4. Dividing the workload between Chat and Codex
+
+<box border radius="lg" padding={3} gap={3}>
+  <text weight="medium">Allocation across all 30 slices</text>
+  <box direction="row" height="14px" radius="full" clip gap="0">
+    <box background="#25845E" width="20%"/>
+    <box background="#D49B38" width="13.333%"/>
+    <box background="#497ED2" flex="1"/>
+  </box>
+  <grid columns={3} gap={2}>
+    <grid-item>
+      <row align="center" gap={1}>
+        <box background="#25845E" size="9px" radius="sm"/>
+        <text size="xs" weight="medium">Chat</text>
+      </row>
+      <title size="lg" tabularNums>6</title>
+      <caption>20%</caption>
+    </grid-item>
+    <grid-item>
+      <row align="center" gap={1}>
+        <box background="#D49B38" size="9px" radius="sm"/>
+        <text size="xs" weight="medium">Hybrid</text>
+      </row>
+      <title size="lg" tabularNums>4</title>
+      <caption>13%</caption>
+    </grid-item>
+    <grid-item>
+      <row align="center" gap={1}>
+        <box background="#497ED2" size="9px" radius="sm"/>
+        <text size="xs" weight="medium">Codex</text>
+      </row>
+      <title size="lg" tabularNums>20</title>
+      <caption>67%</caption>
+    </grid-item>
+  </grid>
+</box>
+
+I would specifically reserve Chat for data models, algorithms, deterministic test cases, configuration logic, UI design and architecture reviews.
+
+Codex should be responsible for multi-file repository changes, integrating native libraries, Windows/browser communication, executable packaging, automated test execution and debugging actual behaviour.
+
+**This does not mean Chat should only write documentation.** For example, Chat could produce the actual source implementation of a categorisation algorithm, filename sanitiser or scheduler rule evaluator. Codex would then integrate it into the existing application, run its tests and resolve platform-specific problems.
+
+This should help minimise unnecessary Codex work without confusing generated code with validated, integrated functionality.
+
+## 5. Recommended build order
+
+<box gap={3}>
+  <list connector="solid" marker="number" gap={3}>
+    <list-item>
+      **Milestone A — Functional Download Manager**
+
+      Modules 32.1–32.6, plus the essential security safeguards from Module 36.
+
+      Deliverable: A Windows application that can download files, manage a queue, pause/resume, survive application restarts and display a functional UI.
+
+      <badge color="success">First usable release target: v0.1</badge>
+    </list-item>
+    <list-item>
+      **Milestone B — Browser integration**
+
+      Module 33, beginning with manual handoff from the browser and progressing to opt-in interception.
+
+      Deliverable: Download with DK from Chrome, Edge, Firefox and Zen, where supported.
+    </list-item>
+    <list-item>
+      **Milestone C — Media and batch downloads**
+
+      Module 34.
+
+      Deliverable: Media selection, format options, multiple URLs, and supported video/audio downloading.
+    </list-item>
+    <list-item>
+      **Milestone D — Advanced download control**
+
+      Modules 35 and 36.
+
+      Deliverable: Persistent scheduling, rate limiting, smart organisation, searchable history and completed security controls.
+    </list-item>
+    <list-item>
+      **Milestone E — Optional protocols**
+
+      Module 37.
+
+      Deliverable: Separately enabled torrent and advanced transfer support, if we decide it provides sufficient value.
+    </list-item>
+  </list>
+</box>
+
+I would avoid advancing to the browser or media modules until the core download engine has passed its primary reliability tests.
+
+## 6. Testing and completion standards
+
+A working download manager must be reliable, not just fast.
+
+The automated test suite should include a local HTTP test server that simulates interrupted downloads, failed requests, unavailable servers, connection throttling, changed files, missing range support, redirects and disk-write failures.
+
+Each module also needs UI testing and a privacy audit before it is considered release-ready.
+
+| Test | Required behaviour |
+|---|---|
+| Network disconnects | Retry or resume correctly |
+| App closes during download | Persist state and recover |
+| Server doesn't support resuming | Safely restart rather than corrupt data |
+| Remote file changes | Detect incompatible partial content |
+| Disk becomes full | Stop safely, preserve recoverable data |
+| Destination already exists | Ask or follow an explicit collision rule |
+| Browser extension uninstalled | Main download manager continues working |
+| Restricted media source | Report unsupported/protected content |
+| App runs offline | Dashboard and history remain accessible |
+
+An important performance criterion is that segmented downloading should improve throughput *when conditions permit*. Neither IDM nor our clone can guarantee a speed increase when the server or internet connection is already the bottleneck.
+
+There are also strong existing free alternatives, especially <Entity category="software" value="Free Download Manager" disambig="File download acceleration software"/> and <Entity category="software" value="JDownloader 2" disambig="Download management software"/>. Our differentiation should focus on polished integration, local privacy, transparent controls and consistency with Desktop Essentials. <Cite refs={["turn792684search0","turn541636search7"]}/>
+
+## 7. What we should do immediately
+
+My recommended starting point is **Slice 32.1 here in Chat**.
+
+That would establish the initial data schema, download-state machine, engine interface, queue behaviour, errors and test vectors. This is sufficiently self-contained to specify and prototype here without using Codex for the entire process.
+
+Afterwards, use Codex for the first native implementation.
+
+Here is the initial Codex handoff prompt, ready for when those specifications are settled:
+
+<WritingBlock id="62381" variant="standard"># DK's Desktop Essentials — Downloads & Transfers
+
+Implement the foundational download engine for the new Downloads & Transfers category in the existing Windows application.
+
+Start with Module 32 (Download Manager Core), focusing on Slices 32.1–32.3. Do not implement browser extensions, media extraction, torrent handling or advanced scheduling yet.
+
+## Instructions
+
+1. Inspect the existing repository, solution structure, architecture, UI conventions and build/test commands. Preserve all existing Desktop Essentials modules.
+2. Review the project's master index and existing development documentation. Register Downloads & Transfers as Category 7 and Module 32 as Download Manager Core.
+3. Create a dedicated roadmap and progress log for this category, recording the 30 proposed slices across Modules 32–37.
+4. Implement a clean download-job interface and persistent job-state model that can later be reused by browser capture, media extraction, scheduling and the download library.
+5. Assess aria2 as a possible download backend. Document its licensing, packaging, security and integration implications before adopting it.
+6. Implement initial HTTP/HTTPS downloads, URL submission, destination selection, download progress, cancellation, and explicit error reporting.
+7. Include initial safety controls: safe filenames, validated destinations, temporary files, no automatic execution and privacy-preserving logs.
+8. Add deterministic automated tests, preferably with a local HTTP test fixture.
+9. Build and test the changes using the existing Windows toolchain.
+10. Keep the implementation entirely local except for user-requested downloads. Do not add analytics, telemetry, mandatory accounts, remote services or licence checks.
+
+## Development constraints
+
+- Use the project's existing architecture rather than introducing a separate application.
+- Keep the engine interface replaceable.
+- Do not overwrite unrelated work.
+- Do not claim that advanced pause/resume, segmentation or browser support is complete until those slices have actually been implemented and tested.
+- Keep compatibility with the project's open-source and privacy-first principles.
+
+## Completion report
+
+Provide the files changed, implemented functionality, automated test results, any Windows/manual testing still required, known limitations and the next recommended slice.
+
+Do not begin future modules merely because there is time remaining. Prioritise completing and validating the assigned slices.</WritingBlock>
+
+## Final recommendation
+
+I would treat **Modules 32–36 as the core IDM-replacement project**, with Module 37 as an optional expansion. We can work on this category independently of the controller modules, while preserving the shared Desktop Essentials design language.
+
+The first real objective should be a usable v0.1 download manager with dependable pause/resume and persistent queues. Once that foundation is proven, browser capture and media downloads will be substantially easier to integrate.
+
+<text color="secondary" size="xs">**Acronym key:** IDM = Internet Download Manager; UI = User Interface; API = Application Programming Interface; HTTP/HTTPS = Hypertext Transfer Protocol / Secure; DRM = Digital Rights Management; URL = Uniform Resource Locator; LAN = Local Area Network; SFTP = SSH File Transfer Protocol; SQLite = Embedded relational database engine.</text>
