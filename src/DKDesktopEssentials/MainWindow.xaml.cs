@@ -66,13 +66,20 @@ public partial class MainWindow : Window
                 uiFolder,
                 CoreWebView2HostResourceAccessKind.DenyCors);
 
+            // Only the packaged SPA may navigate or call privileged native APIs.
             WebView.CoreWebView2.NavigationStarting += (_, args) =>
             {
-                if (!Uri.TryCreate(args.Uri, UriKind.Absolute, out var target) ||
-                    !string.Equals(target.Host, AppHost, StringComparison.OrdinalIgnoreCase))
-                {
+                if (!ControllerHubOriginPolicy.IsTrustedDocumentUri(args.Uri))
                     args.Cancel = true;
-                }
+            };
+            WebView.CoreWebView2.FrameNavigationStarting += (_, args) => args.Cancel = true;
+            WebView.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
+            WebView.CoreWebView2.WebResourceRequested += (_, args) =>
+            {
+                // Prevent outbound fetches, remote fonts, iframes and other network resources.
+                if (!ControllerHubOriginPolicy.IsTrustedResourceUri(args.Request.Uri))
+                    args.Response = WebView.CoreWebView2.Environment.CreateWebResourceResponse(
+                        null, 403, "Forbidden", "Content-Type: text/plain");
             };
 
             WebView.CoreWebView2.NewWindowRequested += (_, args) => args.Handled = true;
@@ -101,6 +108,12 @@ public partial class MainWindow : Window
 
     private async void OnWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
     {
+        // The sender is a security boundary; matching the event type alone is insufficient.
+        if (_shutdownStarted || !ControllerHubOriginPolicy.IsTrustedDocumentUri(e.Source))
+            return;
+
+        try
+        {
         string message;
         try
         {
@@ -114,7 +127,8 @@ public partial class MainWindow : Window
         var controllerResponse = await _controllerHubBridge.HandleAsync(message);
         if (controllerResponse is not null)
         {
-            WebView.CoreWebView2.PostWebMessageAsJson(controllerResponse);
+            if (!_shutdownStarted && WebView.CoreWebView2 is not null)
+                WebView.CoreWebView2.PostWebMessageAsJson(controllerResponse);
             return;
         }
 
@@ -146,6 +160,14 @@ public partial class MainWindow : Window
                     // DragMove can fail if the pointer is released before WPF receives the message.
                 }
                 break;
+        }
+        }
+        catch (Exception ex)
+        {
+            // An exception from an async-void WebView event otherwise reaches WPF's dispatcher.
+            // Do not allow a failed provider/network operation to terminate the app.
+            System.Diagnostics.Trace.TraceError(
+                $"Unhandled WebView controller command error: {ex.GetType().Name}");
         }
     }
 
