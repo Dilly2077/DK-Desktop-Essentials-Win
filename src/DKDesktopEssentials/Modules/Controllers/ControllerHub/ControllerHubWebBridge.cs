@@ -1,4 +1,7 @@
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Net.Http;
+using System.Security;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -56,9 +59,26 @@ public sealed class ControllerHubWebBridge
                 var result = await ExecuteAsync(command, payload, cancellationToken);
                 return SerializeResponse(command, requestId, true, result, null);
             }
-            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or InvalidDataException or IOException or JsonException or Win32Exception)
+            catch (OperationCanceledException)
+            {
+                return SerializeResponse(command, requestId, false, null, "The operation was cancelled.");
+            }
+            catch (HttpRequestException)
+            {
+                return SerializeResponse(command, requestId, false, null,
+                    "The provider download could not be completed. Check your connection and retry.");
+            }
+            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or InvalidDataException
+                or IOException or JsonException or Win32Exception or UnauthorizedAccessException or SecurityException)
             {
                 return SerializeResponse(command, requestId, false, null, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                // An unexpected backend error must never escape into the WPF async-void event handler.
+                Trace.TraceError($"Controller Hub command '{command}' failed: {ex.GetType().Name}");
+                return SerializeResponse(command, requestId, false, null,
+                    "An unexpected controller error occurred. No successful change was confirmed.");
             }
         }
     }
@@ -138,7 +158,9 @@ public sealed class ControllerHubWebBridge
             case "controllerHub:exportProfile":
             {
                 var profileId = RequireGuid(payload, "profileId");
-                var json = await _service.ExportProfileJsonAsync(profileId, cancellationToken);
+                // Portable exports exclude device identities unless the user explicitly opts in.
+                var json = await _service.ExportProfileJsonAsync(profileId, cancellationToken,
+                    includeDeviceIdentifiers: ReadBoolean(payload, "includeDeviceIdentifiers"));
                 return new { profileId, json };
             }
 
