@@ -1,0 +1,271 @@
+DK DESKTOP ESSENTIALS — PROJECT SOURCE TRANSCRIPTION
+Original project attachment: 01_Controllers_and_Gaming_Input_Paywall_Audit(1).docx
+Format: plain-text extraction for Codex; source tables/typography may be flattened.
+Do not confuse planned targets with implemented functionality.
+
+01 Controllers and Gaming Input Paywall Audit
+
+DK'S DESKTOP ESSENTIALS  /  COMPETITIVE PAYWALL AUDIT
+	01
+Controllers & Gaming Input
+Remapping, diagnostics, profiles, saves, game libraries and overlays
+
+
+
+Purpose
+A product-requirements audit of features that current public competitors restrict to paid editions, subscriptions, DLC, or post-trial licences. The aim is to identify features DK’s Desktop can make available locally and free, while avoiding needless duplication of already excellent free/open-source tools.
+Scope note: “Complete” here means all premium-gated features explicitly surfaced by the official pricing/comparison/help pages reviewed for the named competitors. It is not a claim that every software product in the market or every historical feature flag has been enumerated.
+Research cut: 16 September 2026. Prices are snapshots and should be rechecked before implementation or publication.
+
+
+How to read this audit
+	Label
+	Meaning
+
+	PAYWALLED
+	Feature exists in a paid tier, DLC, licence, or only after purchasing the product.
+
+	LIMITED FREE
+	The free edition exposes the feature with a cap, time limit or restricted mode.
+
+	FREE BASELINE
+	A strong free/open-source competitor already offers this capability; DK needs integration/UX/privacy differentiation.
+
+	DK TARGET
+	Feature is a plausible requirement for DK’s free/local implementation; not a promise that implementation is trivial.
+
+	CAUTION
+	Feature may require privileged drivers, third-party codecs, vendor SDKs, licensed databases, or other constraints.
+
+
+
+Category summary
+	DK module
+	Main paywall examples
+	Strong free baseline
+	DK opportunity
+
+	Controller Hub / remapping
+	reWASD Advanced; DSX+
+	Steam Input; DS4Windows / AntiMicroX
+	Strong - integration + no account/licence
+
+	Controller diagnostics
+	DSX+/specialist tools
+	Gamepad Tester-style tools
+	Strong if unified with remapper
+
+	Controller → KB/mouse
+	reWASD; Controller Companion
+	AntiMicroX
+	Medium - free baseline is strong
+
+	Automatic game profiles
+	reWASD autodetect / profile layers
+	Partial in free tools
+	Strong inside one controller stack
+
+	Game Save Manager
+	Few meaningful consumer paywalls
+	GameSave Manager
+	Medium - free baseline already excellent
+
+	Game Library Aggregator
+	LaunchBox Premium / Big Box
+	Playnite
+	Medium - Playnite is formidable
+
+	FPS / System Overlay
+	FPS Monitor; HWiNFO Pro OSD limits
+	RTSS / MSI Afterburner ecosystem
+	Strong when tied to DK hardware profiles
+
+
+
+
+Controller Hub, Diagnostics & Game Profiles
+DK module goal. One input stack for PlayStation/Xbox/Switch/generic controllers: remapping, calibration, drift diagnosis, curves/deadzones, macros, virtual output and per-game profiles.
+Natural suite links: Macro Engine; Hardware/Performance Profiles; RGB game profiles
+reWASD Advanced / Lifetime Access
+	Gate
+	Price/model
+	Source
+
+	Paid edition; 7-day full trial
+	Lifetime from $39.99; account authorization required
+	reWASD feature / pricing page
+
+
+Premium / gated feature inventory
+• Combo: multi-step macros / sequences.
+• Advanced Mapping: native mapping controls, muting native input, advanced stick tuning, trigger-zone tuning, controller-button combos, physical mouse-to-stick mapping, and advanced vibration controls.
+• Radial Menu for contextual on-screen/control menus.
+• 4 Slots for multiple configuration slots.
+• Rapid Fire, including turbo/toggle-style repeated input workflows.
+• Mobile Controller: phone/tablet as a configurable gamepad/control surface.
+• Custom Crosshair overlay and related aiming overlay customisation.
+• Send Input for software-generated keyboard/mouse input scenarios.
+• Advanced analogue-key workflows such as actuation/deadzone/press-zone and Rapid Trigger tuning on supported analogue keyboards.
+• All future advanced features are included only with the current Lifetime Access model rather than legacy feature licences.
+Note: reWASD is now predominantly one-time Lifetime Access rather than a new-customer subscription, but still uses account-based authorization.
+DSX + DSX+ DLC
+	Gate
+	Price/model
+	Source
+
+	Paid base app + paid DLC
+	DSX+ DLC listed around $3.99 before regional/discount variation
+	Steam DSX+ DLC page
+
+
+Premium / gated feature inventory
+• Virtual DualSense emulation for games that natively recognise a PlayStation controller.
+• Bluetooth audio and haptic-feedback support for DualSense / DualSense Edge.
+• Adaptive-trigger response forwarding.
+• Light-bar, player-indicator and mute-LED control tied to virtual DualSense output.
+• Standard rumble feedback across wired and wireless connections.
+• Deadzone adjustment, button remapping, motion tuning and touchpad tuning associated with the DLC feature set.
+• DSX ownership verification remains an external entitlement dependency; current Steam documentation describes cached offline use rather than permanent licence-free operation.
+Free baseline / competitive reality
+• AntiMicroX provides a strong free/open-source controller-to-keyboard/mouse baseline.
+• DS4Windows-style tools and Steam Input already provide substantial free controller compatibility; DK’s differentiation must be one coherent device/diagnostic/profile stack rather than “remapping for free.”
+Recommended DK free/local target
+□ Support major PlayStation, Xbox, Switch and generic HID controllers through one device layer.
+□ Button/stick/trigger visualiser, drift graph, polling-rate/latency test, calibration and battery status.
+□ Deadzone, anti-deadzone, response curves, trigger thresholds and stick shape options.
+□ Per-button remapping, chord/shortcut mapping, turbo/toggle and macro sequences.
+□ Multiple shift/layer states and radial menus.
+□ Virtual-controller output (where legally/technically feasible) plus keyboard/mouse output.
+□ Gyro/touchpad mapping on supported devices.
+□ Per-game executable detection and automatic profile switching.
+□ Local profile import/export with no DK account.
+□ Transparent low-level driver/virtual-device status and recovery diagnostics.
+Implementation cautions
+! Virtual gamepad emulation often depends on kernel/virtual-bus drivers and anti-cheat compatibility. Do not promise universal compatibility.
+! Avoid implementing features intended to bypass anti-cheat or game integrity systems.
+
+Game Save Manager
+DK module goal. Discover known local save locations and provide versioned local backup/restore without cloud dependency.
+Natural suite links: Game Library Aggregator
+Free baseline / competitive reality
+• GameSave Manager states that it has always been completely free, has no ads, junk or telemetry, and is funded by optional donations. This is already almost exactly the DK philosophy.
+• LaunchBox added extensive save tracking/backups/version history as a regular feature in 2026 rather than clearly labelling it Premium.
+Recommended DK free/local target
+□ Automatic discovery for a maintained catalogue of game save locations.
+□ Manual custom save-location definitions.
+□ Versioned backup, backup-on-game-close, retention rules and one-click restore.
+□ Portable/exportable backup archive format.
+□ Diff metadata (date/size/hash) and clear “what will be restored” preview.
+□ Optional integration with DK Game Library and profile launcher.
+Implementation cautions
+! Maintaining a save-location database is the real long-term cost; let users contribute definitions without sending personal save data.
+
+Game Library Aggregator
+DK module goal. One local catalogue for installed games across storefronts/emulators with controller-friendly optional UI.
+Natural suite links: Game Save Manager; Controller Profiles; Performance/RGB Profiles
+LaunchBox Premium / Big Box
+	Gate
+	Price/model
+	Source
+
+	Free core + paid Premium
+	$30 regular (1 year updates) / $75 lifetime updates at research date
+	LaunchBox Premium page + official changelog
+
+
+Premium / gated feature inventory
+• Big Box: premium “10-foot” full-screen interface for TV/handheld/arcade/controller use.
+• Custom LaunchBox themes and extensive Big Box theme/custom-view support.
+• Media Packs manager and downloadable visual packs (clear logos, badges, platform icons, controller-input graphics).
+• 3D box/case models, full-screen 3D viewing, 3D CoverFlow and model rotation; theme control over 3D presentation.
+• Big Box screensavers / attract-style game discovery views.
+• Platform Documents: attach and order manuals/documents at platform level.
+• Rearrange/remove filter sections in the sidebar.
+• Keyboard and controller automation, including keyboard automation without a hold key.
+• Use Big Box as the Windows shell for arcade/HTPC setups.
+• Hide platforms/categories/playlists in Big Box.
+• Pause screens with manual/document/URL access, reset, save/load-state hooks, achievements and disc-swap workflows.
+• Custom marquee support and marquee scaling/aspect options; multi-monitor Big Box support.
+• Different themes per platform and custom themes/views.
+• Interface lock-down with PIN to prevent changes.
+• Alpha-numeric navigation list and configurable image priorities/image-type switching in Big Box.
+• Custom sound packs / granular Big Box volume controls and other presentation customisation surfaced as Premium in official changelogs.
+Note: LaunchBox also has many excellent free library-management features; the strongest paid differentiator is Big Box/presentation/customisation rather than basic importing.
+Free baseline / competitive reality
+• Playnite is completely free/open source and explicitly states there are no paid upgrades, subscriptions, feature restrictions or paywalls. It already imports storefronts/emulators and supports a unified local library.
+Recommended DK free/local target
+□ Unified storefront/emulator imports without DK account.
+□ Metadata/artwork cache stored locally and editable by the user.
+□ Full-screen controller mode included free.
+□ Themes and layout customisation included free.
+□ Local playtime/history and filters.
+□ Per-game launch commands, pre/post scripts, controller/performance/RGB profile hooks.
+□ Save-manager integration and portable library export.
+Implementation cautions
+! Storefront APIs and metadata services can change; design adapters so integrations can fail independently.
+
+FPS / System Overlay
+DK module goal. Local in-game overlay for FPS, frametime and selected hardware metrics, linked to hardware monitoring and profiles.
+Natural suite links: Hardware Monitor; Performance Profiles; Game Profiles
+HWiNFO Pro
+	Gate
+	Price/model
+	Source
+
+	Free personal edition with Pro limits
+	Pro from $29 initial maintenance; lifetime option available
+	HWiNFO licences
+
+
+Premium / gated feature inventory
+• Unlimited OSD items (free edition capped at 5).
+• Unlimited shared-memory interface (free edition limited to 12 hours per run).
+• Automatic sensor logging via command line.
+• Automatic report generation via command line.
+• Automatic updates.
+• Extended remote-monitoring entitlement beyond the free shared-memory time limit / machine allowance.
+FPS Monitor
+	Gate
+	Price/model
+	Source
+
+	Demo restrictions; licence removes them
+	Paid licence; price shown at checkout
+	FPS Monitor official site
+
+
+Premium / gated feature inventory
+• Customisable in-game system-information overlays without demo restrictions.
+• Multiple overlays with individually selected sensors.
+• Hardware-usage statistics collection to file for analysis.
+• Hardware alerts shown in the overlay when configured metrics approach dangerous states.
+Free baseline / competitive reality
+• MSI Afterburner/RTSS-style monitoring overlays are a strong free baseline for many gamers; DK should not exist merely to show FPS.
+Recommended DK free/local target
+□ FPS and frametime graph/summary.
+□ Selectable CPU/GPU/RAM/storage/network metrics from the shared Hardware Monitor.
+□ Unlimited overlay items and multiple layouts.
+□ Threshold alerts with per-sensor styling.
+□ Per-game overlay presets and hotkeys.
+□ Local CSV/JSON logging and session comparison.
+□ No account, entitlement check or remote analytics.
+Implementation cautions
+! Overlay injection can conflict with anti-cheat and other overlays; provide compatibility modes and a clear disable path.
+
+
+
+What this means for DK’s Desktop
+The best DK requirement is not “copy every premium product.” It is to expose the useful local capability without arbitrary quotas, cloud accounts or entitlement checks, while retaining conservative safety boundaries for hardware, drivers and automation.
+• Prefer one shared engine per technical domain (sensor service, input service, LAN pairing, macro engine) so multiple modules do not duplicate privileged background services.
+• If an excellent free/open-source product already dominates the category, differentiate through integration, simpler UX and verifiable local-only behaviour rather than claiming the feature itself is novel.
+• For all risky actions—drivers, fan control, process rules, disk operations—show exactly what will change and provide an explicit revert path.
+
+
+Sources
+Official product, pricing, licensing and support pages were prioritised. Links below are the pages used for this snapshot.
+1. reWASD Advanced / Lifetime Access — https://www.rewasd.com/advanced-controller-mapping
+2. DSX + DSX+ DLC — https://store.steampowered.com/app/2345650
+3. LaunchBox Premium / Big Box — https://www.launchbox-app.com/premium
+4. HWiNFO Pro — https://www.hwinfo.com/licenses/
+5. FPS Monitor — https://fpsmon.com/en/
+Research snapshot: 16 September 2026  •  Official sources prioritised  •  Pricing/features can change
