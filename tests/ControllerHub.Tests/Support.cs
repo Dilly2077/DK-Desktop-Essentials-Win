@@ -84,10 +84,15 @@ internal sealed class Fixture : IAsyncDisposable
 internal sealed class InputStub : IControllerProvider
 {
     public ConcurrentDictionary<string, ControllerSnapshot> States { get; } = new();
+    public Exception? EnumerationFailure { get; set; }
     public event EventHandler<ControllerDeviceEventArgs>? DeviceAdded { add { } remove { } }
     public event EventHandler<ControllerDeviceEventArgs>? DeviceRemoved { add { } remove { } }
     public static ControllerDeviceDescriptor Descriptor(string id) => new(id, "Test controller", ControllerFamily.PlayStation, 0x054c, 0x0ce6, false, true, 2, 4, 1);
-    public IReadOnlyList<ControllerDeviceDescriptor> GetConnectedDevices() => States.Keys.Select(Descriptor).ToArray();
+    public IReadOnlyList<ControllerDeviceDescriptor> GetConnectedDevices()
+    {
+        if (EnumerationFailure is not null) throw EnumerationFailure;
+        return States.Keys.Select(Descriptor).ToArray();
+    }
     public bool TryRead(string id, out ControllerSnapshot? snapshot) => States.TryGetValue(id, out snapshot);
     public void Set(string id, double south) => States[id] = new(id, 1, new Dictionary<StandardControl, double> { [StandardControl.South] = south }, null, null, null);
     public void Dispose() { }

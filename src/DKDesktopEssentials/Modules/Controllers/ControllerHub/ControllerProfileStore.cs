@@ -129,10 +129,18 @@ public sealed class ControllerProfileStore
         return duplicate;
     }
 
-    public async Task<string> ExportJsonAsync(Guid profileId, CancellationToken cancellationToken = default)
+    public async Task<string> ExportJsonAsync(Guid profileId, CancellationToken cancellationToken = default,
+        bool includeDeviceIdentifiers = false)
     {
         var profile = await LoadAsync(profileId, cancellationToken)
             ?? throw new FileNotFoundException($"Controller profile {profileId} was not found.");
+
+        if (!includeDeviceIdentifiers)
+        {
+            // Export only a portable copy. Never change the stored profile's device link.
+            profile.DeviceMatch.DeviceId = null;
+            profile.AdvancedDeviceId = null; // SDL IDs may contain serials or USB paths.
+        }
 
         return JsonSerializer.Serialize(profile, _jsonOptions);
     }

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text.Json;
 using System.Windows;
 using DKDesktopEssentials.Modules.Controllers.ControllerHub;
 using Microsoft.Web.WebView2.Core;
@@ -66,13 +67,20 @@ public partial class MainWindow : Window
                 uiFolder,
                 CoreWebView2HostResourceAccessKind.DenyCors);
 
+            // Only the packaged SPA may navigate or call privileged native APIs.
             WebView.CoreWebView2.NavigationStarting += (_, args) =>
             {
-                if (!Uri.TryCreate(args.Uri, UriKind.Absolute, out var target) ||
-                    !string.Equals(target.Host, AppHost, StringComparison.OrdinalIgnoreCase))
-                {
+                if (!ControllerHubOriginPolicy.IsTrustedDocumentUri(args.Uri))
                     args.Cancel = true;
-                }
+            };
+            WebView.CoreWebView2.FrameNavigationStarting += (_, args) => args.Cancel = true;
+            WebView.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
+            WebView.CoreWebView2.WebResourceRequested += (_, args) =>
+            {
+                // Prevent outbound fetches, remote fonts, iframes and other network resources.
+                if (!ControllerHubOriginPolicy.IsTrustedResourceUri(args.Request.Uri))
+                    args.Response = WebView.CoreWebView2.Environment.CreateWebResourceResponse(
+                        null, 403, "Forbidden", "Content-Type: text/plain");
             };
 
             WebView.CoreWebView2.NewWindowRequested += (_, args) => args.Handled = true;
@@ -101,6 +109,12 @@ public partial class MainWindow : Window
 
     private async void OnWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
     {
+        // The sender is a security boundary; matching the event type alone is insufficient.
+        if (_shutdownStarted || !ControllerHubOriginPolicy.IsTrustedDocumentUri(e.Source))
+            return;
+
+        try
+        {
         string message;
         try
         {
@@ -111,10 +125,19 @@ public partial class MainWindow : Window
             message = e.WebMessageAsJson;
         }
 
+        // A local page can request privileged operations only after native confirmation.
+        if (!ConfirmControllerMaintenance(message, out var deniedResponse))
+        {
+            if (!_shutdownStarted && WebView.CoreWebView2 is not null && deniedResponse is not null)
+                WebView.CoreWebView2.PostWebMessageAsJson(deniedResponse);
+            return;
+        }
+
         var controllerResponse = await _controllerHubBridge.HandleAsync(message);
         if (controllerResponse is not null)
         {
-            WebView.CoreWebView2.PostWebMessageAsJson(controllerResponse);
+            if (!_shutdownStarted && WebView.CoreWebView2 is not null)
+                WebView.CoreWebView2.PostWebMessageAsJson(controllerResponse);
             return;
         }
 
@@ -146,6 +169,67 @@ public partial class MainWindow : Window
                     // DragMove can fail if the pointer is released before WPF receives the message.
                 }
                 break;
+        }
+        }
+        catch (Exception ex)
+        {
+            // An exception from an async-void WebView event otherwise reaches WPF's dispatcher.
+            // Do not allow a failed provider/network operation to terminate the app.
+            System.Diagnostics.Trace.TraceError(
+                $"Unhandled WebView controller command error: {ex.GetType().Name}");
+        }
+    }
+
+    private bool ConfirmControllerMaintenance(string message, out string? deniedResponse)
+    {
+        deniedResponse = null;
+        if (!message.TrimStart().StartsWith("{", StringComparison.Ordinal))
+            return true;
+
+        try
+        {
+            using var json = JsonDocument.Parse(message);
+            var root = json.RootElement;
+            if (root.ValueKind != JsonValueKind.Object ||
+                !root.TryGetProperty("type", out var commandElement) ||
+                commandElement.ValueKind != JsonValueKind.String)
+                return true;
+
+            var command = commandElement.GetString();
+            var warning = command switch
+            {
+                "controllerHub:repairOutputBackend" =>
+                    "Repairing HIDMaestro can remove virtual controllers created by other applications. Close other affected applications and continue only if you accept that global impact.",
+                "controllerHub:removeOutputBackend" =>
+                    "Removing HIDMaestro can remove ALL HIDMaestro virtual devices, including ones used by other applications. Continue?",
+                "controllerHub:installOutputDriver" =>
+                    "This installs an optional Windows virtual-controller driver and may request administrator privileges. Only proceed if you intended to install it.",
+                _ => null
+            };
+            if (warning is null)
+                return true;
+
+            if (MessageBox.Show(warning, "Confirm controller maintenance",
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                return true;
+
+            var requestId = root.TryGetProperty("requestId", out var id) &&
+                id.ValueKind == JsonValueKind.String ? id.GetString() : null;
+            deniedResponse = JsonSerializer.Serialize(new
+            {
+                type = "controllerHub:response",
+                requestId,
+                command,
+                ok = false,
+                result = (object?)null,
+                error = "Controller maintenance was cancelled by the user."
+            });
+            return false;
+        }
+        catch (JsonException)
+        {
+            // The bridge will return a parse/validation error for malformed messages.
+            return true;
         }
     }
 
