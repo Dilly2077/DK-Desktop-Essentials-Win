@@ -7,6 +7,7 @@ internal static class BridgeCases
     {
         ("Bridge handles correlated profile CRUD and persistent aliases/defaults", Profiles),
         ("Bridge rejects malformed commands and invalid profiles predictably", Errors),
+        ("Native origin policy refuses non-local senders and URLs", OriginPolicy),
         ("Bridge reports unsupported advanced effects instead of false success", Features),
         ("Bridge drives two independent profile-to-mapping-to-output sessions", Sessions),
         ("Missing advanced input neutralizes output and resumes only after release", AdvancedDisconnect)
@@ -20,7 +21,30 @@ internal static class BridgeCases
         await f.Command("setDefaultDevice", new { deviceId = "a" }); await f.Command("setDefaultProfile", new { deviceId = "a", profileId = id });
         var devices = (await f.Command("listDevices")).GetProperty("result");
         Check(devices[0].GetProperty("displayName").GetString() == "Living room" && devices[0].GetProperty("isDefault").GetBoolean(), "Bridge preferences not reflected");
+        // Native device IDs and SDL serial/path identifiers must not leak by default.
+        var stored = (await f.Profiles.LoadAsync(id))!;
+        stored.AdvancedDeviceId = "sdl:054c:0ce6:serial:private-controller-serial";
+        await f.Profiles.SaveAsync(stored);
         var exported = (await f.Command("exportProfile", new { profileId = id })).GetProperty("result").GetProperty("json").GetString();
+        using (var portable = System.Text.Json.JsonDocument.Parse(exported!))
+        {
+            var root = portable.RootElement;
+            Check(root.GetProperty("deviceMatch").GetProperty("deviceId").ValueKind == System.Text.Json.JsonValueKind.Null,
+                "Portable profile export leaked the Windows device ID");
+            Check(root.GetProperty("advancedDeviceId").ValueKind == System.Text.Json.JsonValueKind.Null,
+                "Portable profile export leaked the SDL serial/path device identifier");
+        }
+        var boundExport = (await f.Command("exportProfile", new { profileId = id, includeDeviceIdentifiers = true }))
+            .GetProperty("result").GetProperty("json").GetString();
+        using (var bound = System.Text.Json.JsonDocument.Parse(boundExport!))
+        {
+            Check(bound.RootElement.GetProperty("deviceMatch").GetProperty("deviceId").GetString() == "a",
+                "Explicit device-bound export was unexpectedly anonymized");
+            Check(bound.RootElement.GetProperty("advancedDeviceId").GetString() == stored.AdvancedDeviceId,
+                "Explicit device-bound export did not preserve advanced controller identity");
+        }
+        Check((await f.Profiles.LoadAsync(id))!.AdvancedDeviceId == stored.AdvancedDeviceId,
+            "Portable export unexpectedly altered stored profile");
         var imported = (await f.Command("importProfile", new { json = exported, preserveId = true })).GetProperty("result").GetProperty("id").GetGuid();
         Check(imported != id, "Bridge import overwrote profile");
         await f.Command("duplicateProfile", new { profileId = id, name = "Duplicate" });
@@ -38,9 +62,44 @@ internal static class BridgeCases
         var invalid = new ControllerProfile { Layers = null! };
         var validated = (await f.Command("validateProfile", new { profile = invalid })).GetProperty("result");
         Check(validated.GetProperty("errors").GetArrayLength() > 0 && validated.GetProperty("conflicts").GetArrayLength() > 0, "Invalid profile was not explained");
+        f.Input.EnumerationFailure = new HttpRequestException("Sensitive internal URL");
+        var offline = await f.Command("listDevices", ok: false);
+        Check(!offline.GetProperty("error").GetString()!.Contains("Sensitive internal URL"),
+            "Network exception leaked a sensitive internal URL");
+        f.Input.EnumerationFailure = new NullReferenceException("Private device context");
+        var unexpected = await f.Command("listDevices", ok: false);
+        Check(!unexpected.GetProperty("error").GetString()!.Contains("Private device context"),
+            "Unexpected native exception details leaked into the UI");
+        f.Input.EnumerationFailure = null;
+
         await f.Service.DisposeAsync();
         await f.Command("startOutputSession", new { deviceId = "a", profileId = Guid.NewGuid() }, ok: false);
     }
+
+    private static Task OriginPolicy()
+    {
+        Check(ControllerHubOriginPolicy.IsTrustedDocumentUri("https://dk.local/index.html"),
+            "Local SPA was refused");
+        Check(ControllerHubOriginPolicy.IsTrustedDocumentUri("https://dk.local/index.html#controllers"),
+            "Local SPA fragment was refused");
+        Check(ControllerHubOriginPolicy.IsTrustedResourceUri("https://dk.local/styles.css"),
+            "Local CSS was refused");
+        foreach (var rejected in new[] {
+            "http://dk.local/index.html", "https://dk.local:444/index.html",
+            "https://dk.local.evil.example/index.html", "https://user@dk.local/index.html",
+            "file:///C:/temp/index.html", "about:blank", "https://example.com/index.html"
+        })
+        {
+            Check(!ControllerHubOriginPolicy.IsTrustedDocumentUri(rejected),
+                "Untrusted document allowed: " + rejected);
+            Check(!ControllerHubOriginPolicy.IsTrustedResourceUri(rejected),
+                "Untrusted resource allowed: " + rejected);
+        }
+        Check(!ControllerHubOriginPolicy.IsTrustedDocumentUri("https://dk.local/other.html"),
+            "Unexpected top-level page allowed");
+        return Task.CompletedTask;
+    }
+
     private static async Task Features()
     {
         await using var f = new Fixture();
