@@ -1,0 +1,331 @@
+DK DESKTOP ESSENTIALS — PROJECT SOURCE TRANSCRIPTION
+Original project attachment: 02_Hardware_Performance_and_Appearance_Paywall_Audit(1).docx
+Format: plain-text extraction for Codex; source tables/typography may be flattened.
+Do not confuse planned targets with implemented functionality.
+
+02 Hardware Performance and Appearance Paywall Audit
+
+DK'S DESKTOP ESSENTIALS  /  COMPETITIVE PAYWALL AUDIT
+	02
+Hardware, Performance & Appearance
+Sensors, fan curves, RGB, ScreenSync, power/process profiles and startup controls
+
+
+
+Purpose
+A product-requirements audit of features that current public competitors restrict to paid editions, subscriptions, DLC, or post-trial licences. The aim is to identify features DK’s Desktop can make available locally and free, while avoiding needless duplication of already excellent free/open-source tools.
+Scope note: “Complete” here means all premium-gated features explicitly surfaced by the official pricing/comparison/help pages reviewed for the named competitors. It is not a claim that every software product in the market or every historical feature flag has been enumerated.
+Research cut: 16 September 2026. Prices are snapshots and should be rechecked before implementation or publication.
+
+
+How to read this audit
+	Label
+	Meaning
+
+	PAYWALLED
+	Feature exists in a paid tier, DLC, licence, or only after purchasing the product.
+
+	LIMITED FREE
+	The free edition exposes the feature with a cap, time limit or restricted mode.
+
+	FREE BASELINE
+	A strong free/open-source competitor already offers this capability; DK needs integration/UX/privacy differentiation.
+
+	DK TARGET
+	Feature is a plausible requirement for DK’s free/local implementation; not a promise that implementation is trivial.
+
+	CAUTION
+	Feature may require privileged drivers, third-party codecs, vendor SDKs, licensed databases, or other constraints.
+
+
+
+Category summary
+	DK module
+	Main paywall examples
+	Strong free baseline
+	DK opportunity
+
+	Hardware Monitor
+	HWiNFO Pro; AIDA64
+	Libre Hardware Monitor; HWiNFO personal
+	Strong - shared sensor service
+
+	Fan Control
+	SignalRGB Pro; Argus Monitor
+	Fan Control (free)
+	Medium - integration is the differentiator
+
+	RGB / ScreenSync
+	SignalRGB Pro
+	OpenRGB
+	Strong only as part of one control centre
+
+	Performance / Power Profiles
+	Process Lasso Pro; ParkControl Pro
+	Windows power plans / free Process Lasso core
+	Strong - automatic cross-module profiles
+
+	Startup / Process Tools
+	Process Lasso Pro; CCleaner Pro
+	Task Manager / Autoruns
+	Medium - avoid “optimizer” gimmicks
+
+
+
+
+Hardware Monitor & FPS Sensor Service
+DK module goal. Expose local CPU/GPU/RAM/storage/network sensors once, then let Overlay, Fans, RGB and Profiles consume them.
+Natural suite links: Fans; Overlay; Performance Profiles; Drivers
+HWiNFO Pro
+	Gate
+	Price/model
+	Source
+
+	Free personal edition with Pro limits
+	Pro from $29; maintenance/lifetime options
+	HWiNFO licences
+
+
+Premium / gated feature inventory
+• Automatic report generation from the command line.
+• Automatic sensor logging from the command line.
+• Automatic updating.
+• Unlimited shared-memory sensor interface (free: 12-hour limit).
+• Unlimited OSD items (free: maximum 5).
+• Expanded remote monitoring entitlement / removal of the 12-hour shared-memory restriction.
+• Commercial-use rights require appropriate Pro licence.
+AIDA64 Extreme
+	Gate
+	Price/model
+	Source
+
+	30-day limited trial → paid product
+	$65.95 for 3 PCs at research date
+	AIDA64 comparison / store
+
+
+Premium / gated feature inventory
+• Detailed hardware analysis and software/Windows details.
+• Overclock information.
+• System Stability Test.
+• Monitor diagnostics.
+• CPU, memory and disk benchmarks.
+• Sensor monitoring, logging and alerting.
+• OSD panel and desktop gadget.
+• External LCD/VFD display support.
+• Smartphone/tablet monitoring integration.
+• Uptime/downtime statistics.
+• Current AIDA64 also includes an FPS capture module in recent releases.
+Free baseline / competitive reality
+• Libre Hardware Monitor is free/open source and already exposes a broad sensor baseline.
+• HWiNFO itself is free for personal use; DK’s case is zero restrictions, shared integration and no external licensing dependency.
+Recommended DK free/local target
+□ Local hardware inventory and sensor tree with update-rate controls.
+□ Graphs/history retained locally for user-selected duration.
+□ CSV/JSON export.
+□ Threshold alerts.
+□ Shared local sensor API for DK modules.
+□ Unlimited overlay/dashboard items.
+□ Portable diagnostic report.
+□ No telemetry or licence checks.
+Implementation cautions
+! Some sensor access requires vendor/driver-specific support. Prefer documented APIs and isolate unstable hardware plugins.
+
+Fan Control
+DK module goal. Control supported fans using local sensors and flexible curves while sharing the same Hardware Monitor engine.
+Natural suite links: Hardware Monitor; Performance Profiles; RGB
+SignalRGB Pro - Advanced Fan Tuning
+	Gate
+	Price/model
+	Source
+
+	Free presets → Pro custom controls
+	SignalRGB Pro subscription
+	SignalRGB Pro pricing
+
+
+Premium / gated feature inventory
+• Custom multi-point fan curves.
+• Unlimited cooling profiles.
+• Expanded sensor choices for fan control.
+• Colour customisation across cooling graphs/gauges.
+Argus Monitor
+	Gate
+	Price/model
+	Source
+
+	30-day fully functional evaluation → paid licence
+	€14.95 / $16.45 1-year update entitlement; 3-year option; old versions remain usable
+	Argus Monitor official
+
+
+Premium / gated feature inventory
+• Fan control for motherboard, GPU, AIO and supported external controllers.
+• Fixed fan speeds and temperature-based fan curves.
+• Use CPU/GPU/HDD/SSD/motherboard/AIO sensor temperatures as control sources.
+• Multiple controllers per fan with maximum-output arbitration.
+• Switchable fan-control profiles via GUI or hotkeys.
+• Hysteresis, temperature averaging and rate limits.
+• Synthetic temperatures using mathematical combinations (mean/max/time average/limits).
+• System/disk monitoring features bundled with the paid application.
+Free baseline / competitive reality
+• Fan Control by Rem0o is a strong free competitor; this means DK needs safer hardware support plus integration with game/performance/RGB profiles.
+Recommended DK free/local target
+□ Multi-point curves, fixed mode, hysteresis, smoothing and step/rate limits.
+□ Sensor mixing / synthetic max-average sources.
+□ Unlimited named profiles.
+□ Per-game/profile switching through shared DK rule engine.
+□ Fail-safe handling when sensors disappear or the app crashes.
+□ Clear supported-hardware matrix and read-only mode.
+Implementation cautions
+! Fan writing can be hardware-specific and potentially unsafe. Build hard bounds, fail-safe restore and explicit unsupported states.
+
+RGB Control & ScreenSync RGB
+DK module goal. Local cross-brand RGB control with optional screen-reactive zones and game/profile hooks.
+Natural suite links: Hardware Monitor; Fans; Game Profiles
+SignalRGB Pro
+	Gate
+	Price/model
+	Source
+
+	Free core → Pro content/automation
+	Subscription
+	SignalRGB Pro pricing
+
+
+Premium / gated feature inventory
+• 45+ game integrations.
+• 250+ RGB effects.
+• 20+ audio visualizers.
+• 20+ LCD screen themes with expanded sensor data.
+• Unlimited local effects.
+• Camera/screen-reactive effects.
+• LED colour tuning.
+• Local API access.
+• Mini Player.
+• Ad removal.
+• Unlimited macro automation and profiles (also relevant to Automation module).
+Free baseline / competitive reality
+• OpenRGB is free/open source and already handles a large cross-brand device set. A standalone “free RGB app” is therefore weak; combine it with profiles, fans, monitoring and screen sync.
+Recommended DK free/local target
+□ Per-device/zone static colour and effects.
+□ Unified device layout with zone mapping.
+□ Screen capture colour sampling by zones, refresh-rate/CPU controls and exclusion/pause rules.
+□ Audio-reactive effects processed locally.
+□ Per-game automatic profiles.
+□ Local effect editor and import/export.
+□ Plugin/device architecture so unsupported devices do not destabilise the core.
+Implementation cautions
+! Device protocols may be undocumented or legally/licensing constrained; use independent clean-room implementations or permitted SDKs.
+
+Performance / Power Profiles
+DK module goal. Automate power plans and safe process rules, then coordinate them with fan/RGB/controller profiles.
+Natural suite links: Controller Profiles; Fans; RGB; Hardware Monitor
+Process Lasso Pro
+	Gate
+	Price/model
+	Source
+
+	Many core features free; automation features trial-only or Pro
+	Lifetime licences sold by Bitsum
+	Process Lasso Free vs Pro
+
+
+Premium / gated feature inventory
+• Persistent (“Always”) memory-priority rules.
+• CPU Limiter.
+• Instance Balancer.
+• Power Plan Automation.
+• Process Watchdog.
+• Disallowed Processes rules.
+• Instance Count Limits.
+• Hard CPU Throttling.
+• Prevent Sleep Rules.
+• Keep Running rules.
+• Processor Group Extender.
+• Internet Explorer restriction (legacy/special-case rule on current comparison table).
+• Fully automated updates.
+• Access to older versions.
+• Premium support.
+ParkControl Pro
+	Gate
+	Price/model
+	Source
+
+	Core app free; two Pro benefits
+	$14.95 single-PC lifetime nominal; lower sale price displayed during research
+	ParkControl official
+
+
+Premium / gated feature inventory
+• Bitsum Dynamic Boost: automatically switch between active and idle power plans.
+• Notifications showing when/which process changed the active power plan.
+Free baseline / competitive reality
+• Process Lasso already leaves ProBalance, Performance Mode, Efficiency Mode, CPU affinities/sets/priorities, I/O/GPU priorities, IdleSaver, timed keep-awake, SMT controls, SmartTrim, profile switching and more free.
+Recommended DK free/local target
+□ Named local profiles bundling Windows power plan + fan + RGB + controller + overlay settings.
+□ Automatic activation on game/app launch, AC/DC state or user hotkey.
+□ Process affinity/CPU-set/priority rules with reversible defaults.
+□ Process watchdog rules (restart/limit/keep-awake) with clear audit log.
+□ Profile-change notifications and history.
+□ No exaggerated “boost” claims; show exactly which Windows setting changed.
+Implementation cautions
+! Do not present priority/affinity changes as guaranteed FPS improvements; expose reversible controls and logs.
+
+Startup & Process Tools
+DK module goal. Power-user startup/process visibility and reversible rules rather than opaque “PC optimization.”
+Natural suite links: Drivers; Hardware; Quick Launcher
+CCleaner Professional
+	Gate
+	Price/model
+	Source
+
+	Free cleaning baseline → paid Pro
+	$44.95/year list price shown in current US page; promotions vary
+	CCleaner Free/Pro comparison
+
+
+Premium / gated feature inventory
+• Performance Optimizer (suspend/disable selected background apps).
+• Driver Updater.
+• Complete Health Check versus basic free health check.
+• Software Updater.
+• Complete cleaning beyond the standard free set.
+• Automatic browser-history privacy cleaning.
+• Automatic internet-tracker removal.
+• Automatic low-space/junk cleaning / Smart Cleaning.
+• Scheduled cleaning.
+• Real-time monitoring.
+• Priority support.
+• Pro Plus adds Recuva file recovery and Speccy hardware inventory.
+Free baseline / competitive reality
+• Microsoft Sysinternals Autoruns/Process Explorer and Windows Task Manager provide extremely strong free foundations.
+Recommended DK free/local target
+□ Startup entries with source/publisher/path, impact and disable/restore.
+□ Scheduled tasks/services view with conservative warnings.
+□ Process tree, command line, signature/publisher, network usage and file location.
+□ Rule history and one-click revert.
+□ Optional watchdog / keep-running / affinity rules shared with Profiles.
+□ No registry-cleaner or fake “health score” pressure tactics.
+Implementation cautions
+! Editing services/startup items can break systems. Require clear provenance and restore points/config export for risky changes.
+
+
+
+What this means for DK’s Desktop
+The best DK requirement is not “copy every premium product.” It is to expose the useful local capability without arbitrary quotas, cloud accounts or entitlement checks, while retaining conservative safety boundaries for hardware, drivers and automation.
+• Prefer one shared engine per technical domain (sensor service, input service, LAN pairing, macro engine) so multiple modules do not duplicate privileged background services.
+• If an excellent free/open-source product already dominates the category, differentiate through integration, simpler UX and verifiable local-only behaviour rather than claiming the feature itself is novel.
+• For all risky actions—drivers, fan control, process rules, disk operations—show exactly what will change and provide an explicit revert path.
+
+
+Sources
+Official product, pricing, licensing and support pages were prioritised. Links below are the pages used for this snapshot.
+1. HWiNFO Pro — https://www.hwinfo.com/licenses/
+2. AIDA64 Extreme — https://www.aida64.com/compare-aida64-features
+3. SignalRGB Pro - Advanced Fan Tuning — https://www.signalrgb.com/pro/
+4. Argus Monitor — https://www.argusmonitor.com/
+5. Process Lasso Pro — https://bitsum.com/howfree/
+6. ParkControl Pro — https://bitsum.com/parkcontrol/
+7. CCleaner Professional — https://www.ccleaner.com/ccleaner-free
+Research snapshot: 16 September 2026  •  Official sources prioritised  •  Pricing/features can change
