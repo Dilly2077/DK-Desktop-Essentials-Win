@@ -313,8 +313,9 @@ public sealed partial class ControllerHubService : IAsyncDisposable
         CancellationToken cancellationToken = default) =>
         _profileStore.DuplicateAsync(profileId, newName, cancellationToken);
 
-    public Task<string> ExportProfileJsonAsync(Guid profileId, CancellationToken cancellationToken = default) =>
-        _profileStore.ExportJsonAsync(profileId, cancellationToken);
+    public Task<string> ExportProfileJsonAsync(Guid profileId, CancellationToken cancellationToken = default,
+        bool includeDeviceIdentifiers = false) =>
+        _profileStore.ExportJsonAsync(profileId, cancellationToken, includeDeviceIdentifiers);
 
     public Task<ControllerProfile> ImportProfileJsonAsync(
         string json,
