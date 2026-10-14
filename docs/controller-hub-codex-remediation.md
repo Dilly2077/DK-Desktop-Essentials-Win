@@ -1,5 +1,7 @@
 # Codex task — complete Controller Hub security remediation
 
+Implementation on latest main: see [issue #12 implementation and remaining acceptance limits](controller-hub-security-remediation.md). The instructions below are the original brief; PR #11's branch work is already merged. Production driver/hardware certification remains pending.
+
 **Work against:** `Dilly2077/DK-Desktop-Essentials-Win`, branch `security/controller-hub-remediation-2026-10-14` (rebase onto main as necessary). **Audit source:** `docs/controller-hub-security-audit-2026-10-14.md` from audit PR #10. **Do not merge unsafe or failing changes**.
 
 ## Work already completed in this branch

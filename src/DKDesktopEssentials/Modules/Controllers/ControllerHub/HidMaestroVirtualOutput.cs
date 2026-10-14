@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text.Json;
+using DKDesktopEssentials.Security;
 
 namespace DKDesktopEssentials.Modules.Controllers.ControllerHub;
 
@@ -84,19 +85,21 @@ public sealed class HidMaestroPackageManager
 
             await using (var source = await response.Content.ReadAsStreamAsync(cancellationToken))
             await using (var destination = File.Create(temporaryZip))
-                await source.CopyToAsync(destination, cancellationToken);
+                await ProviderIntegrity.CopyPackageAsync(source, destination, cancellationToken);
 
-            var digest = await ComputeSha256Async(temporaryZip, cancellationToken);
-            if (!string.Equals(digest, ReleaseSha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException($"HIDMaestro package hash mismatch. Expected {ReleaseSha256}, received {digest}.");
+            var packageBytes = await File.ReadAllBytesAsync(temporaryZip, cancellationToken);
+            var verifiedBytes = ProviderIntegrity.ReadArchiveLibrary(packageBytes, ReleaseSha256, "HIDMaestro.Core.dll", ProviderPins.HidMaestroSdkSha256);
+            {
+                var temporarySdk = SdkPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+                try
+                {
+                    await File.WriteAllBytesAsync(temporarySdk, verifiedBytes, cancellationToken);
+                    File.Move(temporarySdk, SdkPath, overwrite: true);
+                }
+                finally { if (File.Exists(temporarySdk)) File.Delete(temporarySdk); }
+            }
 
-            using var archive = ZipFile.OpenRead(temporaryZip);
-            var sdkEntry = archive.Entries.FirstOrDefault(entry =>
-                string.Equals(Path.GetFileName(entry.FullName), "HIDMaestro.Core.dll", StringComparison.OrdinalIgnoreCase))
-                ?? throw new InvalidDataException("The verified HIDMaestro archive does not contain HIDMaestro.Core.dll.");
-
-            ExtractEntry(sdkEntry, SdkPath);
-
+            using var archive = new ZipArchive(new MemoryStream(packageBytes, writable: false));
             var licenseEntry = archive.Entries.FirstOrDefault(entry =>
                 string.Equals(Path.GetFileName(entry.FullName), "LICENSE", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(Path.GetFileName(entry.FullName), "LICENSE.txt", StringComparison.OrdinalIgnoreCase));
@@ -170,6 +173,8 @@ public sealed class HidMaestroPackageManager
         start.ArgumentList.Add(mode);
         start.ArgumentList.Add("--sdk");
         start.ArgumentList.Add(SdkPath);
+        start.ArgumentList.Add("--acknowledge-global");
+        start.ArgumentList.Add("true");
 
         using var process = Process.Start(start)
             ?? throw new InvalidOperationException("Could not start the elevated controller-output helper.");
@@ -186,12 +191,6 @@ public sealed class HidMaestroPackageManager
         File.Move(temporary, destination, overwrite: true);
     }
 
-    private static async Task<string> ComputeSha256Async(string path, CancellationToken cancellationToken)
-    {
-        await using var stream = File.OpenRead(path);
-        var hash = await SHA256.HashDataAsync(stream, cancellationToken);
-        return Convert.ToHexString(hash).ToLowerInvariant();
-    }
 }
 
 public sealed class HidMaestroOutputSink : IControllerOutputSink

@@ -11,6 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="../Shared/ProviderIntegrity.cs" Link="Security/ProviderIntegrity.cs" />
+    <Compile Include="../Shared/ProviderPins.cs" Link="Security/ProviderPins.cs" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4191.47" />
   </ItemGroup>
 

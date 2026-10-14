@@ -15,4 +15,8 @@ if (@(Get-ChildItem -LiteralPath $Bundle -Recurse -File -Filter 'HIDMaestro.Core
 if (@(Get-ChildItem -LiteralPath $Bundle -Recurse -File -Filter '*Tests.dll').Count -ne 0) {
     throw 'A test harness leaked into the release bundle.'
 }
+if (@(Get-ChildItem -LiteralPath $Bundle -Recurse -File -Filter '*TestFixture*').Count -ne 0 -or
+    @(Get-ChildItem -LiteralPath $Bundle -Recurse -File -Filter '*Generated.cs').Count -ne 0) {
+    throw 'A test helper or generated test trust anchor leaked into the release bundle.'
+}
 Write-Output 'Windows bundle verified; optional/test SDKs and test executables are excluded.'

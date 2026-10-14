@@ -7,7 +7,7 @@ internal static class HelperCases
 {
     public static IEnumerable<(string Name, Func<Task> Run)> All(string[] args)
     {
-        var helper = TestHarness.Option(args, "--helper") ?? throw new ArgumentException("Use --helper and --fake-sdk, or explicitly choose --managed-only.");
+        var helper = TestHarness.Option(args, "--fixture-helper") ?? throw new ArgumentException("Use the separate --fixture-helper, or explicitly choose --managed-only.");
         var sdk = TestHarness.Option(args, "--fake-sdk") ?? throw new ArgumentException("--fake-sdk is required.");
         return new (string, Func<Task>)[]
         {
@@ -22,10 +22,11 @@ internal static class HelperCases
     {
         public string Root { get; } = Path.Combine(Path.GetTempPath(), "DK-helper-tests-" + Guid.NewGuid().ToString("N"));
         public string SdkPath => Path.Combine(Root, "HIDMaestro.Core.dll");
-        public Files(string sdk) { Directory.CreateDirectory(Root); File.Copy(sdk, SdkPath); }
+        private readonly string? _previousLogDirectory = Environment.GetEnvironmentVariable("DK_TEST_LOG_DIRECTORY");
+        public Files(string sdk) { Directory.CreateDirectory(Root); File.Copy(sdk, SdkPath); Environment.SetEnvironmentVariable("DK_TEST_LOG_DIRECTORY", Root); }
         public JsonElement[] Events() => Directory.EnumerateFiles(Root, "*.jsonl").SelectMany(File.ReadAllLines)
             .Select(line => { using var doc = JsonDocument.Parse(line); return doc.RootElement.Clone(); }).ToArray();
-        public void Dispose() { if (Directory.Exists(Root)) Directory.Delete(Root, recursive: true); }
+        public void Dispose() { Environment.SetEnvironmentVariable("DK_TEST_LOG_DIRECTORY", _previousLogDirectory); if (Directory.Exists(Root)) Directory.Delete(Root, recursive: true); }
     }
     private static void Neutralized(Files files)
     {
