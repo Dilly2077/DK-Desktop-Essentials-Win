@@ -1,0 +1,345 @@
+DK DESKTOP ESSENTIALS — PROJECT SOURCE TRANSCRIPTION
+Original project attachment: 04_Network_and_Device_Bridge_Paywall_Audit(1).docx
+Format: plain-text extraction for Codex; source tables/typography may be flattened.
+Do not confuse planned targets with implemented functionality.
+
+04 Network and Device Bridge Paywall Audit
+
+DK'S DESKTOP ESSENTIALS  /  COMPETITIVE PAYWALL AUDIT
+	04
+Network & Device Bridge
+LAN monitoring, remote actions, phone bridge, transfer, webcam and local streaming
+
+
+
+Purpose
+A product-requirements audit of features that current public competitors restrict to paid editions, subscriptions, DLC, or post-trial licences. The aim is to identify features DK’s Desktop can make available locally and free, while avoiding needless duplication of already excellent free/open-source tools.
+Scope note: “Complete” here means all premium-gated features explicitly surfaced by the official pricing/comparison/help pages reviewed for the named competitors. It is not a claim that every software product in the market or every historical feature flag has been enumerated.
+Research cut: 16 September 2026. Prices are snapshots and should be rechecked before implementation or publication.
+
+
+How to read this audit
+	Label
+	Meaning
+
+	PAYWALLED
+	Feature exists in a paid tier, DLC, licence, or only after purchasing the product.
+
+	LIMITED FREE
+	The free edition exposes the feature with a cap, time limit or restricted mode.
+
+	FREE BASELINE
+	A strong free/open-source competitor already offers this capability; DK needs integration/UX/privacy differentiation.
+
+	DK TARGET
+	Feature is a plausible requirement for DK’s free/local implementation; not a promise that implementation is trivial.
+
+	CAUTION
+	Feature may require privileged drivers, third-party codecs, vendor SDKs, licensed databases, or other constraints.
+
+
+
+Category summary
+	DK module
+	Main paywall examples
+	Strong free baseline
+	DK opportunity
+
+	Home Network Dashboard
+	Fing Premium; GlassWire Premium
+	Advanced IP Scanner / WiFiman basics
+	Strong - local continuous history
+
+	Wake-on-LAN / Remote Actions
+	Unified Remote Full
+	Many free WOL tools
+	Medium inside Device Bridge
+
+	LAN File Transfer / Clipboard
+	AirDroid premium remote features; Synergy Plus
+	LocalSend / KDE Connect
+	Medium - local free baseline strong
+
+	Phone Remote / Macro Deck
+	Unified Remote Full; Stream Deck Mobile Pro
+	Macro Deck / KDE Connect
+	Strong if one DK companion
+
+	Phone as Webcam
+	DroidCam Pro
+	Some OS/vendor webcam modes
+	Medium - Pro gates are clear
+
+	Local Screen / Control Streaming
+	Splashtop / TeamViewer tiers
+	Sunshine/Moonlight for gaming
+	Medium - only if LAN-only simplicity wins
+
+
+
+
+Home Network Dashboard
+DK module goal. Continuously inventory the user’s LAN, keep local history, alert on changes and expose diagnostics without DK servers.
+Natural suite links: Wake-on-LAN; Device Bridge; System Info
+Fing Premium
+	Gate
+	Price/model
+	Source
+
+	Free basic scans → Premium subscription
+	$7.99/month or $69.99/year
+	Fing pricing
+
+
+Premium / gated feature inventory
+• Unlimited manual scans (free capped at 3/day).
+• Continuous automated scans.
+• Full event timeline/history (free limited to Today / short window depending current client).
+• Two monitored networks.
+• Presence tracking.
+• Device-status updates and new-device detection.
+• Mobile and email event notifications.
+• Advanced troubleshooting and scheduled Internet speed tests.
+• Internet/power outage detection.
+• Advanced open-ports finder.
+• Router vulnerability checks and automated checks.
+• Hidden-camera detector.
+• Block network access.
+• Automatic blocking of new/unknown devices.
+• Limit Internet time and schedule Internet downtime.
+• Internet performance and presence reports; local API/export/IFTTT items are surfaced in paid comparison tiers.
+GlassWire Premium
+	Gate
+	Price/model
+	Source
+
+	Free monitoring with limits → Premium
+	$2.99/month billed annually for Personal plan at research date
+	GlassWire pricing
+
+
+Premium / gated feature inventory
+• Security alerts/features beyond free: new-device connections, Evil Twin detection, system-file monitoring, device-list monitoring, idle activity summaries, ARP spoofing detection, proxy-settings monitoring.
+• Unlimited bandwidth usage/history versus free 1-day/24-hour history.
+• Unlimited alert logs instead of current-day only.
+• Usage-data export and Internet-access monitoring.
+• Interactive world map.
+• Firewall controls: click-to-block, Lockdown Mode, Ask to Connect, multiple firewall profiles, bidirectional firewall control.
+• RDP connection detection.
+• Unlimited remote connections versus one in Free.
+• DNS server settings monitoring.
+• Dedicated support.
+• Additional skins/themes and Mini Viewer.
+Free baseline / competitive reality
+• Advanced IP Scanner and WiFiman cover basic discovery/diagnostics for free; GlassWire itself keeps network-history data local according to its FAQ, so privacy alone is not unique here.
+• DK should emphasise continuous LAN history with no account, no subscription, no cloud account and transparent Windows-firewall integration rather than claiming first-of-kind local monitoring.
+Recommended DK free/local target
+□ Continuous device discovery with local-only history.
+□ Known/unknown labels, first/last seen, vendor/OUI when available, user nicknames and notes.
+□ Join/leave notifications generated locally.
+□ Latency/availability history and local gateway/Internet reachability timeline.
+□ Manual/periodic speed test only when user asks; distinguish LAN latency from ISP throughput.
+□ Port/service discovery with clear permission/safety UI.
+□ Optional Windows Firewall per-app view and rule editor rather than opaque network blocking hacks.
+□ Export/import local inventory and rules.
+Implementation cautions
+! True per-device Internet blocking generally requires router support or acting as a gateway; do not pretend a Windows desktop client can universally block arbitrary LAN clients without network control.
+
+Wake-on-LAN, PC Remote & Macro Deck
+DK module goal. One paired Android companion controls trusted PCs over the LAN: WOL, media, volume, input, launchers and configured actions.
+Natural suite links: Macro Engine; Controller Profiles; Network Dashboard
+Unified Remote Full
+	Gate
+	Price/model
+	Source
+
+	Free 18-remotes core → one-time Full unlock
+	One-time purchase per platform
+	Unified Remote features
+
+
+Premium / gated feature inventory
+• 40+ additional premium remotes.
+• Custom remotes.
+• Screen Viewer.
+• Android home-screen shortcuts.
+• Customizable Android widgets.
+• Notification-area Quick Actions.
+• Voice control.
+• NFC-tag actions / URI/QR generation workflow.
+• IR actions on supported phones.
+• Android Wear support.
+• Tasker integration.
+• iOS URI control.
+• Siri Shortcuts and iOS widget/quick-switch integrations.
+Stream Deck Mobile Pro
+	Gate
+	Price/model
+	Source
+
+	6 keys free → Pro
+	Monthly/yearly/lifetime; US help page lists $2.99/mo, $24.99/yr, $49.99 lifetime
+	Elgato Stream Deck Mobile
+
+
+Premium / gated feature inventory
+• Up to 64 keys (free: 6).
+• Fully custom layouts: vertical, horizontal, square, up to all 64 keys or a single large button.
+• Custom/background “faceplate” library and user-uploaded backgrounds.
+Free baseline / competitive reality
+• Macro Deck is a free/open-source phone macro-pad competitor; KDE Connect covers many remote actions. The compelling DK product is a single companion tied to every Desktop module.
+Recommended DK free/local target
+□ Unlimited user-defined buttons/pages/grids.
+□ Actions: apps/files/URLs, keyboard shortcuts, media, audio devices, power actions, scripts and DK module commands.
+□ Local pairing with explicit trust keys and per-device permissions.
+□ WOL and configurable local actions.
+□ Mouse/keyboard mode and optional Screen Viewer.
+□ Profiles that appear automatically based on foreground app/game.
+□ Import/export profiles as readable local files.
+□ No DK account, cloud relay or key count limit.
+Implementation cautions
+! Remote command execution is security-sensitive. Default to a finite allowlist of actions; script execution should be explicit expert mode.
+
+LAN File Transfer & Clipboard Sync
+DK module goal. Direct trusted-device transfer over the local network with no DK relay.
+Natural suite links: Desktop Companion; Phone Remote
+AirDroid Personal Premium
+	Gate
+	Price/model
+	Source
+
+	Free local network; remote-network caps/features → subscription
+	$3.99/month or $29.99/year
+	AirDroid Personal pricing
+
+
+Premium / gated feature inventory
+• Remote data quota becomes unlimited (free: 200MB/month remote).
+• Remote file-size limit rises to 1GB/file (free: 30MB/file).
+• More Android devices (3 default paid versus 2 free; extra-device purchase available).
+• Remote file-management upload limits expanded.
+• Remote Camera over remote networks.
+• One-way audio over remote networks.
+• Remote keyboard / broader remote controls depending client.
+• Screen-mirroring recording/screenshot features in the paid comparison.
+• Notification-sound controls.
+• Multiple/queued dialling.
+• Find Phone “catch intruders” and remote data erase outside local-only constraints.
+• Premium removes ads and expands auto-backup from photos to photos + videos on current support pages.
+Free baseline / competitive reality
+• LocalSend already provides unlimited local transfer with no account/ads/trackers, and KDE Connect covers clipboard plus file sharing. That makes this a supporting feature, not a flagship standalone DK product.
+• Synergy is also a local-network keyboard/mouse/clipboard product; its paid tiers gate device counts and features such as TLS/SSL and hotkeys, but its data path is local.
+Recommended DK free/local target
+□ Peer discovery and explicit pairing over LAN.
+□ Files/folders with resume, checksum verification and collision handling.
+□ Clipboard text and optionally files/images with per-type permissions.
+□ Transfer history kept locally and clear “open containing folder” actions.
+□ End-to-end encryption between paired devices even on the LAN.
+□ No public relay, upload server or DK account.
+Implementation cautions
+! iOS background/network restrictions differ from Android; keep protocol cross-platform but do not promise identical capabilities.
+
+Phone as Webcam
+DK module goal. Use a phone camera as a local webcam over USB/LAN with image controls and no remote account.
+Natural suite links: Device Bridge; Media
+DroidCam Pro
+	Gate
+	Price/model
+	Source
+
+	Free SD/basic → Pro options
+	One-time or annual in-app upgrade
+	DroidCam Pro feature comparison
+
+
+Premium / gated feature inventory
+• 720p and 1080p HD video.
+• 1440p and 2160p UHD, including 4K60 and 10-bit HDR support where compatible.
+• Webcam microphone support across supported desktop apps.
+• Image/colour adjustments: brightness, contrast, rotate, flip, mirror etc.
+• Remote phone-camera controls from the computer (zoom, exposure etc.).
+• Access to all available lenses including telephoto/ultrawide where supported.
+• Save/restore camera parameters between sessions.
+• Ultra-low-latency transfer mode.
+• Optimized CPU/power usage.
+• All other settings unlocked.
+• No advertising.
+Free baseline / competitive reality
+• Basic phone-as-webcam functionality is increasingly available from OS/vendor ecosystems; DK should focus on USB/LAN privacy, broad Android support and no resolution paywall.
+Recommended DK free/local target
+□ USB and LAN transport.
+□ Resolution/framerate/codec selection up to hardware limits.
+□ Phone microphone optional and separately permissioned.
+□ Lens switching, zoom, exposure/focus/white-balance where APIs permit.
+□ Rotate/mirror/crop/colour adjustments.
+□ Low-latency mode and quality/bandwidth presets.
+□ Remember local device profiles.
+□ Virtual-camera output with clear signed-driver installation.
+Implementation cautions
+! A stable virtual-camera driver and low-latency encoding pipeline are the hard parts. Hardware codecs vary.
+
+Local Screen / Control Streaming
+DK module goal. LAN-only desktop viewing/control for trusted personal devices; no DK cloud relay.
+Natural suite links: Device Bridge; File Transfer; Macro Deck
+Splashtop Personal/Business-style paid tiers
+	Gate
+	Price/model
+	Source
+
+	Subscription
+	Plans vary; Solo/Pro tiers are annual subscriptions
+	Splashtop plans
+
+
+Premium / gated feature inventory
+• Unattended remote access.
+• File transfer / drag-and-drop.
+• Remote printing.
+• Higher Pro tiers add multi-monitor workflows, user roles/access management, chat and session recording.
+• Business tiers expand user/device management and administrative controls.
+TeamViewer Remote paid tiers
+	Gate
+	Price/model
+	Source
+
+	Free personal use → business subscriptions
+	Business pricing varies by tier
+	TeamViewer Remote
+
+
+Premium / gated feature inventory
+• Commercial remote access/support entitlements.
+• Managed devices/users and administrative access controls.
+• File transfer, remote printing, Wake-on-LAN, multi-monitor and session recording workflows.
+• Higher business capabilities such as monitoring, asset/patch management, reporting/audit and SSO depending tier.
+Free baseline / competitive reality
+• Sunshine + Moonlight already provide an excellent free/open-source local game-streaming path, so DK should not attempt to rebuild a streaming codec stack merely to be free.
+Recommended DK free/local target
+□ If built: simple LAN desktop view/control integrated with existing DK pairing.
+□ Clipboard/file-transfer reuse rather than separate subsystems.
+□ Hardware-accelerated encoding when available.
+□ Explicit per-session consent / unattended-access switch.
+□ No relay server; clearly state that it works only where direct LAN reachability exists.
+Implementation cautions
+! This is high complexity and overlaps excellent free software. Defer unless integration materially improves the suite.
+
+
+
+What this means for DK’s Desktop
+The best DK requirement is not “copy every premium product.” It is to expose the useful local capability without arbitrary quotas, cloud accounts or entitlement checks, while retaining conservative safety boundaries for hardware, drivers and automation.
+• Prefer one shared engine per technical domain (sensor service, input service, LAN pairing, macro engine) so multiple modules do not duplicate privileged background services.
+• If an excellent free/open-source product already dominates the category, differentiate through integration, simpler UX and verifiable local-only behaviour rather than claiming the feature itself is novel.
+• For all risky actions—drivers, fan control, process rules, disk operations—show exactly what will change and provide an explicit revert path.
+
+
+Sources
+Official product, pricing, licensing and support pages were prioritised. Links below are the pages used for this snapshot.
+1. Fing Premium — https://www.fing.com/pricing/
+2. GlassWire Premium — https://www.glasswire.com/pricing/
+3. Unified Remote Full — https://www.unifiedremote.com/features
+4. Stream Deck Mobile Pro — https://www.elgato.com/us/en/s/stream-deck-mobile
+5. AirDroid Personal Premium — https://www.airdroid.com/pricing/airdroid-personal/
+6. DroidCam Pro — https://droidcam.app/pro-info.html
+7. Splashtop Personal/Business-style paid tiers — https://www.splashtop.com/pricing
+8. TeamViewer Remote paid tiers — https://www.teamviewer.com/en/products/remote/
+Research snapshot: 16 September 2026  •  Official sources prioritised  •  Pricing/features can change
