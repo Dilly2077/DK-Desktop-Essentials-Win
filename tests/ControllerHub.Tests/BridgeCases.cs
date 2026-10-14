@@ -57,9 +57,12 @@ internal static class BridgeCases
         foreach (var input in new[] { "", "[1]", "{bad", "{\"type\":\"other:command\"}" })
             Check(await f.Bridge.HandleAsync(input) is null, "Unrelated/malformed message consumed");
         await f.Command("unknown", ok: false); await f.Command("readState", new { deviceId = "absent" }, ok: false);
-        var globalCleanup = await f.Command("removeOutputBackend", ok: false);
-        Check(globalCleanup.GetProperty("error").GetString()!.Contains("global-cleanup"),
-            "Global driver cleanup was not blocked without explicit acknowledgment");
+        foreach (var command in new[] { "installOutputDriver", "repairOutputBackend", "removeOutputBackend" })
+        {
+            var globalCleanup = await f.Command(command, ok: false);
+            Check(globalCleanup.GetProperty("error").GetString()!.Contains("global-cleanup"),
+                "Global driver maintenance was not blocked without explicit acknowledgment");
+        }
         await f.Command("repairOutputBackend", ok: false);
         await f.Command("startOutputSession", new { deviceId = "a", profileId = "invalid" }, ok: false);
         await f.Command("importProfile", new { json = "{\"layers\":null}" }, ok: false);

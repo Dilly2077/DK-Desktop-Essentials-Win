@@ -5,6 +5,8 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.ComponentModel;
+using DKDesktopEssentials.Security;
 
 namespace DKDesktopEssentials.Modules.Controllers.ControllerHub;
 
@@ -54,18 +56,19 @@ public sealed class Sdl3PackageManager
 
             await using (var source = await response.Content.ReadAsStreamAsync(cancellationToken))
             await using (var destination = File.Create(temporaryZip))
-                await source.CopyToAsync(destination, cancellationToken);
+                await ProviderIntegrity.CopyPackageAsync(source, destination, cancellationToken);
 
-            var digest = await ComputeSha256Async(temporaryZip, cancellationToken);
-            if (!string.Equals(digest, ReleaseSha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException($"SDL3 package hash mismatch. Expected {ReleaseSha256}, received {digest}.");
-
-            using var archive = ZipFile.OpenRead(temporaryZip);
-            var dllEntry = archive.Entries.FirstOrDefault(entry =>
-                string.Equals(Path.GetFileName(entry.FullName), "SDL3.dll", StringComparison.OrdinalIgnoreCase))
-                ?? throw new InvalidDataException("The verified SDL3 archive does not contain SDL3.dll.");
-
-            ExtractEntry(dllEntry, LibraryPath);
+            var packageBytes = await File.ReadAllBytesAsync(temporaryZip, cancellationToken);
+            var verifiedBytes = ProviderIntegrity.ReadArchiveLibrary(packageBytes, ReleaseSha256, "SDL3.dll", ProviderPins.Sdl3LibrarySha256);
+            {
+                var temporaryDll = LibraryPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+                try
+                {
+                    await File.WriteAllBytesAsync(temporaryDll, verifiedBytes, cancellationToken);
+                    File.Move(temporaryDll, LibraryPath, overwrite: true);
+                }
+                finally { if (File.Exists(temporaryDll)) File.Delete(temporaryDll); }
+            }
 
             var sourceManifest = JsonSerializer.Serialize(new
             {
@@ -95,20 +98,6 @@ public sealed class Sdl3PackageManager
         return Task.CompletedTask;
     }
 
-    private static void ExtractEntry(ZipArchiveEntry entry, string destination)
-    {
-        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-        var temporary = destination + ".tmp";
-        entry.ExtractToFile(temporary, overwrite: true);
-        File.Move(temporary, destination, overwrite: true);
-    }
-
-    private static async Task<string> ComputeSha256Async(string path, CancellationToken cancellationToken)
-    {
-        await using var stream = File.OpenRead(path);
-        var hash = await SHA256.HashDataAsync(stream, cancellationToken);
-        return Convert.ToHexString(hash).ToLowerInvariant();
-    }
 }
 
 public sealed class Sdl3AdvancedControllerProvider : IControllerAdvancedFeatureProvider
@@ -128,6 +117,7 @@ public sealed class Sdl3AdvancedControllerProvider : IControllerAdvancedFeatureP
     private readonly Sdl3PackageManager _packageManager;
     private readonly Dictionary<string, OpenGamepad> _devices = new(StringComparer.Ordinal);
     private nint _library;
+    private VerifiedNativeLibrary? _verifiedLibrary;
     private SdlApi? _api;
     private bool _initialized;
     private bool _disposed;
@@ -346,7 +336,8 @@ public sealed class Sdl3AdvancedControllerProvider : IControllerAdvancedFeatureP
 
         try
         {
-            _library = NativeLibrary.Load(_packageManager.LibraryPath);
+            _verifiedLibrary = VerifiedNativeLibrary.Open(_packageManager.LibraryPath, "SDL3.dll", ProviderPins.Sdl3LibrarySha256);
+            _library = _verifiedLibrary.Handle;
             _api = new SdlApi(_library);
             if (!_api.InitSubSystem(SdlInitGamepad))
                 throw new InvalidOperationException(ReadSdlError(_api) ?? "SDL3 could not initialize the gamepad subsystem.");
@@ -355,13 +346,14 @@ public sealed class Sdl3AdvancedControllerProvider : IControllerAdvancedFeatureP
             LastError = null;
             return true;
         }
-        catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException or BadImageFormatException or InvalidOperationException)
+        catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException or BadImageFormatException or InvalidOperationException or InvalidDataException or IOException or UnauthorizedAccessException or Win32Exception)
         {
             LastError = ex.Message;
             _api = null;
             if (_library != 0)
             {
-                NativeLibrary.Free(_library);
+                _verifiedLibrary?.Dispose();
+                _verifiedLibrary = null;
                 _library = 0;
             }
             return false;
@@ -605,7 +597,8 @@ public sealed class Sdl3AdvancedControllerProvider : IControllerAdvancedFeatureP
             _api = null;
             if (_library != 0)
             {
-                NativeLibrary.Free(_library);
+                _verifiedLibrary?.Dispose();
+                _verifiedLibrary = null;
                 _library = 0;
             }
         }

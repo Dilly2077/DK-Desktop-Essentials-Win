@@ -294,6 +294,7 @@ public sealed class ControllerHubWebBridge
                 return await _service.InstallOutputProviderPackageAsync(cancellationToken);
 
             case "controllerHub:installOutputDriver":
+                RequireGlobalCleanupAcknowledgment(payload);
                 await _service.InstallOutputDriverAsync(cancellationToken);
                 return _service.GetOutputSessionStatus();
 

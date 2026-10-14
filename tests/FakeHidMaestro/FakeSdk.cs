@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Security.Principal;
+using System.Security.AccessControl;
 
 namespace HIDMaestro;
 
@@ -42,9 +44,32 @@ public sealed class HMController : IDisposable
     private bool _disposed;
     public HMController(HMProfile profile, string identity)
     {
-        var directory = Path.GetDirectoryName(typeof(HMController).Assembly.Location)!;
+        var directory = Environment.GetEnvironmentVariable("DK_TEST_LOG_DIRECTORY")
+            ?? throw new InvalidOperationException("Test SDK requires its isolated log directory.");
         _log = Path.Combine(directory, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity))) + ".jsonl");
+        AssertElevatedStaging();
         Write(new { type = "created", profile = profile.Id, identity });
+    }
+    private static void AssertElevatedStaging()
+    {
+        using var identity = WindowsIdentity.GetCurrent();
+        if (!new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator)) return;
+        var temp = Path.TrimEndingDirectorySeparator(Path.GetTempPath());
+        if (Path.GetDirectoryName(temp) != Environment.GetFolderPath(Environment.SpecialFolder.Windows) ||
+            !Path.GetFileName(temp).StartsWith("DKControllerMaintenance-", StringComparison.Ordinal) ||
+            Environment.GetEnvironmentVariable("PATH") != Environment.GetFolderPath(Environment.SpecialFolder.System) ||
+            Environment.CurrentDirectory != Environment.GetFolderPath(Environment.SpecialFolder.System))
+            throw new InvalidOperationException("Elevated SDK inherited an unsafe cache or executable search path.");
+        var child = Path.Combine(temp, "test-owner-rights-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            File.WriteAllText(child, "test-only inherited ACL probe");
+            var rules = new FileInfo(child).GetAccessControl().GetAccessRules(true, true, typeof(SecurityIdentifier)).Cast<FileSystemAccessRule>();
+            if (!rules.Any(rule => rule.IdentityReference.Value == "S-1-3-4" && rule.IsInherited &&
+                rule.FileSystemRights == FileSystemRights.ReadPermissions))
+                throw new InvalidOperationException("SDK-created children did not inherit the owner WRITE_DAC restriction.");
+        }
+        finally { File.Delete(child); }
     }
     public void SubmitState(HMGamepadState state)
     {

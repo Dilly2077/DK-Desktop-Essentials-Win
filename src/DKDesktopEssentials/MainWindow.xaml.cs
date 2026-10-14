@@ -203,7 +203,7 @@ public partial class MainWindow : Window
                 "controllerHub:removeOutputBackend" =>
                     "Removing HIDMaestro can remove ALL HIDMaestro virtual devices, including ones used by other applications. Continue?",
                 "controllerHub:installOutputDriver" =>
-                    "This installs an optional Windows virtual-controller driver and may request administrator privileges. Only proceed if you intended to install it.",
+                    "This installs an optional Windows virtual-controller driver and may request administrator privileges. HIDMaestro installation also performs global cleanup that can remove other applications' virtual controllers. Close affected applications and proceed only if you accept that impact.",
                 _ => null
             };
             if (warning is null)
