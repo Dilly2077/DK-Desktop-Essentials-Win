@@ -1,0 +1,202 @@
+DK DESKTOP ESSENTIALS — PROJECT SOURCE TRANSCRIPTION
+Original project attachment: 06_Automation_and_Power_User_Productivity_Paywall_Audit(1).docx
+Format: plain-text extraction for Codex; source tables/typography may be flattened.
+Do not confuse planned targets with implemented functionality.
+
+<PARSED TEXT FOR PAGE: 1 / 8>
+DK'S DESKTOP ESSENTIALS / COMPETITIVE PAYWALL AUDIT
+Research snapshot: 16 September 2026 • Official sources prioritised • Pricing/features can change
+06
+Automation & Power-User 
+Productivity
+Macros, phone macro deck service and command palette
+Purpose
+A product-requirements audit of features that current public competitors restrict to paid editions, subscriptions, DLC, 
+or post-trial licences. The aim is to identify features DK’s Desktop can make available locally and free, while avoiding 
+needless duplication of already excellent free/open-source tools.
+Scope note: “Complete” here means all premium-gated features explicitly surfaced by the official pricing/comparison/help pages 
+reviewed for the named competitors. It is not a claim that every software product in the market or every historical feature flag has 
+been enumerated.
+Research cut: 16 September 2026. Prices are snapshots and should be rechecked before implementation or publication.
+<PARSED TEXT FOR PAGE: 2 / 8>
+DK'S DESKTOP ESSENTIALS / COMPETITIVE PAYWALL AUDIT
+Research snapshot: 16 September 2026 • Official sources prioritised • Pricing/features can change
+How to read this audit
+Label Meaning
+PAYWALLED Feature exists in a paid tier, DLC, licence, or only after purchasing the product.
+LIMITED FREE The free edition exposes the feature with a cap, time limit or restricted mode.
+FREE BASELINE A strong free/open-source competitor already offers this capability; DK needs 
+integration/UX/privacy differentiation.
+DK TARGET Feature is a plausible requirement for DK’s free/local implementation; not a promise that 
+implementation is trivial.
+CAUTION Feature may require privileged drivers, third-party codecs, vendor SDKs, licensed databases, or
+other constraints.
+Category summary
+DK module Main paywall examples Strong free baseline DK opportunity
+Macro Engine Macro Recorder 
+Pro/Enterprise; reWASD 
+macros
+AutoHotkey Strong if visual + shared
+actions
+Macro Deck Desktop Service Stream Deck Mobile Pro; 
+Unified Remote Full
+Macro Deck Strong as suite bridge
+Quick Launcher / Command Palette Listary Pro PowerToys Run/Command 
+Palette
+Medium - free baseline 
+strong
+<PARSED TEXT FOR PAGE: 3 / 8>
+DK'S DESKTOP ESSENTIALS / COMPETITIVE PAYWALL AUDIT
+Research snapshot: 16 September 2026 • Official sources prioritised • Pricing/features can change
+Macro Engine
+DK module goal. One local automation engine shared by controller mappings, desktop shortcuts, game profiles and 
+the phone companion.
+Natural suite links: Controller Hub; Macro Deck; Game Profiles; Quick Launcher
+Macro Recorder Professional / Enterprise
+Gate Price/model Source
+Free/basic limits →
+paid editions
+Lifetime licence per edition; maintenance terms
+apply
+Macro Recorder shop comparison
+Premium / gated feature inventory
+• Standard paid: more than 10 repetitions.
+• Standard paid: execute programs.
+• Standard paid: Goto & Repeat control flow.
+• Professional: SmartClick.
+• Professional: image recognition and OCR text recognition.
+• Professional: embed macro files.
+• Professional: Smart Record.
+• Professional: pixel-colour detection.
+• Professional: command-line parameters.
+• Professional: Macro Scheduler.
+• Professional: post-playback options.
+• Enterprise: PhraseExpress integration/support.
+• Enterprise: AI support.
+• Enterprise: variables.
+• Enterprise: image & text capture.
+• Enterprise: barcode & QR-code functions.
+• Enterprise: runtime parameter change.
+SignalRGB Pro Macros
+Gate Price/model Source
+2 macros free →
+unlimited Pro
+Subscription SignalRGB Pro
+Premium / gated feature inventory
+• Unlimited macros.
+• Unlimited macro profiles.
+• Macro triggers/actions can launch effects, apps, games, websites and other configured actions.
+Free baseline / competitive reality
+• AutoHotkey is extraordinarily capable and free; DK’s opportunity is a safe visual layer and consistent action system, 
+not inventing scripting automation.
+Recommended DK free/local target
+□ Visual trigger condition action editor. → →
+<PARSED TEXT FOR PAGE: 4 / 8>
+DK'S DESKTOP ESSENTIALS / COMPETITIVE PAYWALL AUDIT
+Research snapshot: 16 September 2026 • Official sources prioritised • Pricing/features can change
+□ Keyboard/mouse sequences with delays, loops and variables.
+□ App/file/URL launch and command/script actions.
+□ Image/OCR/pixel detection as optional advanced local triggers.
+□ Scheduler and app/game-context triggers.
+□ Reusable variables and user prompts.
+□ Dry-run/test mode, execution log and emergency stop hotkey.
+□ Import/export human-readable macro files.
+□ Action permission model so phone/controller clients can only invoke approved actions.
+Implementation cautions
+! Automation can delete files/run arbitrary commands. Sandbox where feasible and clearly separate “safe actions” 
+from expert script execution.
+Macro Deck Desktop Service
+DK module goal. Receive authenticated commands from trusted LAN devices and map them to DK Macro Engine 
+actions.
+Natural suite links: Android Desktop Companion; Macro Engine
+Stream Deck Mobile Pro
+Gate Price/model Source
+6 keys free Pro → Monthly/yearly/lifetime Elgato Stream Deck Mobile
+Premium / gated feature inventory
+• Up to 64 keys.
+• Fully custom keypad layouts.
+• Custom faceplates/backgrounds.
+Unified Remote Full
+Gate Price/model Source
+Free core one- →
+time Full
+One-time per platform Unified Remote features
+Premium / gated feature inventory
+• 40+ premium remotes.
+• Custom remotes.
+• Screen Viewer.
+• Widgets, shortcuts and Quick Actions.
+• Voice/NFC/IR/Wear/Tasker integrations on Android.
+• URI/Siri/Widget automation on iOS.
+Free baseline / competitive reality
+• Macro Deck is already free/open source; therefore DK should make this a companion to the wider suite, not a 
+standalone “free Stream Deck clone.”
+<PARSED TEXT FOR PAGE: 5 / 8>
+DK'S DESKTOP ESSENTIALS / COMPETITIVE PAYWALL AUDIT
+Research snapshot: 16 September 2026 • Official sources prioritised • Pricing/features can change
+Recommended DK free/local target
+□ Unlimited pages/buttons/layouts.
+□ Live labels/icons/state from DK modules (temperatures, mute state, active profile).
+□ Press/hold/double-press/rotary-like logical actions where input device permits.
+□ Local encrypted pairing and device revoke list.
+□ Profile auto-switch based on foreground app.
+□ Macro Engine and direct DK module commands.
+□ No key-count paywall or cloud account.
+Implementation cautions
+! Keep service network surface minimal and LAN-bound by default; support firewall rule creation/removal visibly.
+Quick Launcher / Command Palette
+DK module goal. Keyboard-first access to apps/files/scripts and DK actions.
+Natural suite links: Macro Engine; Files; System Tools
+Listary Pro
+Gate Price/model Source
+Free personal 
+basics Pro →
+$19.95 one-time; lifetime updates Listary Pro
+Premium / gated feature inventory
+• Commercial-use licence.
+• Dark theme.
+• Custom Filters.
+• Index shared network drives.
+• Advanced search syntax.
+• Custom Actions.
+• Up to 3 owned computers under the current Pro licence.
+Free baseline / competitive reality
+• PowerToys Run/Command Palette and Windows search are free; Everything/Listary Free also make raw file search 
+highly competitive.
+Recommended DK free/local target
+□ App/file/folder search with fuzzy matching.
+□ Quick actions on result: open, copy path, run as admin, reveal in Explorer.
+□ Custom aliases/commands/actions.
+□ Search DK settings/modules/actions from the same palette.
+□ Optional local shared-drive index; clear opt-in and index location.
+□ Calculator/unit conversion/basic command plugins processed locally.
+□ Portable user config and no licence/device activation.
+Implementation cautions
+<PARSED TEXT FOR PAGE: 6 / 8>
+DK'S DESKTOP ESSENTIALS / COMPETITIVE PAYWALL AUDIT
+Research snapshot: 16 September 2026 • Official sources prioritised • Pricing/features can change
+! Indexing can expose sensitive filenames in local caches. Encrypt or clearly locate index data and provide purge 
+controls.
+<PARSED TEXT FOR PAGE: 7 / 8>
+DK'S DESKTOP ESSENTIALS / COMPETITIVE PAYWALL AUDIT
+Research snapshot: 16 September 2026 • Official sources prioritised • Pricing/features can change
+What this means for DK’s Desktop
+The best DK requirement is not “copy every premium product.” It is to expose the useful local capability without 
+arbitrary quotas, cloud accounts or entitlement checks, while retaining conservative safety boundaries for hardware, 
+drivers and automation.
+• Prefer one shared engine per technical domain (sensor service, input service, LAN pairing, macro engine) so 
+multiple modules do not duplicate privileged background services.
+• If an excellent free/open-source product already dominates the category, differentiate through integration, simpler 
+UX and verifiable local-only behaviour rather than claiming the feature itself is novel.
+• For all risky actions—drivers, fan control, process rules, disk operations—show exactly what will change and 
+provide an explicit revert path.
+<PARSED TEXT FOR PAGE: 8 / 8>
+DK'S DESKTOP ESSENTIALS / COMPETITIVE PAYWALL AUDIT
+Research snapshot: 16 September 2026 • Official sources prioritised • Pricing/features can change
+Sources
+Official product, pricing, licensing and support pages were prioritised. Links below are the pages used for this snapshot.
+1. Macro Recorder Professional / Enterprise — https://www.macrorecorder.com/shop/
+2. SignalRGB Pro Macros — https://www.signalrgb.com/pro/
+3. Stream Deck Mobile Pro — https://www.elgato.com/us/en/s/stream-deck-mobile
+4. Unified Remote Full — https://www.unifiedremote.com/features
+5. Listary Pro — https://www.listary.com/pro
