@@ -47,9 +47,12 @@
     if(!active) return;
     busy=true;paint();
     try {
-      const [d,p,o,a,ad]=await Promise.all([
+      const results=await Promise.allSettled([
         api('listDevices'),api('listProfiles'),api('getOutputStatus'),api('getAdvancedFeatureStatus'),api('listAdvancedDevices')
       ]);
+      const [d,p,o,a,ad]=results.map(x=>x.status==='fulfilled'?x.value:null);
+      const critical=results.slice(0,2).find(x=>x.status==='rejected');
+      if(critical)throw critical.reason;
       if(!active)return;
       devices=Array.isArray(d)?d:[];profiles=Array.isArray(p)?p:(Array.isArray(p?.profiles)?p.profiles:[]);
       outputStatus=o;advancedStatus=a;advancedDevices=Array.isArray(ad)?ad:[];
@@ -119,7 +122,7 @@
     const d=selectedDevice();const state=inputSnapshot?.standardControls||{};
     const progress=(name)=>Math.round(Math.min(100,Math.abs(Number(state[name])||0)*100));
     return card('Live controller input','<p class="cu-muted">Raw values read from the selected Windows controller. Open this tab to begin sampling; no input is recorded to disk.</p>'+
-      (d?'<div class="cu-live-grid"><div>'+diagram()+'<div class="cu-live-controls">'+CONTROL_NAMES.slice(0,14).map(c=>'<span class="cu-input-pill '+((Number(state[c])||0)>0.5?'lit':'')+'">'+c.replace('DPad','D-')+'</span>').join('')+'</div></div><div class="cu-bars">'+['LeftStickX','LeftStickY','RightStickX','RightStickY','LeftTrigger','RightTrigger'].map(c=>'<div><span>'+c+'</span><meter min="0" max="100" value="'+progress(c)+'"></meter><b>'+((Number(state[c])||0)*100).toFixed(0)+'%</b></div>').join('')+'</div></div>':'<div class="cu-empty">No connected controller. Attach a controller to inspect live input.</div>')+
+      (d?'<div class="cu-live-grid"><div>'+diagram()+'<div class="cu-live-controls">'+CONTROL_NAMES.slice(0,14).map(c=>'<span class="cu-input-pill '+((Number(state[c])||0)>0.5?'lit':'')+'" data-name="'+c+'">'+c.replace('DPad','D-')+'</span>').join('')+'</div></div><div class="cu-bars">'+['LeftStickX','LeftStickY','RightStickX','RightStickY','LeftTrigger','RightTrigger'].map(c=>'<div><span>'+c+'</span><meter min="0" max="100" value="'+progress(c)+'"></meter><b>'+((Number(state[c])||0)*100).toFixed(0)+'%</b></div>').join('')+'</div></div>':'<div class="cu-empty">No connected controller. Attach a controller to inspect live input.</div>')+
       '<div class="cu-note">Drift statistics, polling analysis, calibration and export are planned for Module 2. These are not simulated here.</div>')+
       card('Controller Diagnostics — upcoming','<div class="cu-mini-grid"><div><strong>Stick drift analysis</strong><p>Noise and resting offset graphs</p></div><div><strong>Polling and timing</strong><p>Observed report intervals, not end-to-end latency</p></div><div><strong>Calibration</strong><p>Preview, compare and rollback recommended tuning</p></div></div>');
   }
@@ -180,7 +183,7 @@
   function edit(){if(!editing){const p=profile();if(!p)return null;editing=JSON.parse(JSON.stringify(p));}return editing;}
   function wire(){
     main.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;notice='';inputSnapshot=null;stopPoll();paint();}));
-    $('#cu-device'&&main,'#cu-device')?.addEventListener('change',e=>{deviceId=e.target.value;inputSnapshot=null;stopPoll();paint();});
+    $(main,'#cu-device')?.addEventListener('change',e=>{deviceId=e.target.value;inputSnapshot=null;stopPoll();paint();});
     $(main,'#cu-profile')?.addEventListener('change',e=>{profileId=e.target.value;editing=null;paint();});
     main.querySelectorAll('[data-source]').forEach(b=>b.addEventListener('change',e=>{const p=edit();if(!p)return;const l=p.layers.find(x=>x.isBaseLayer)||p.layers[0];l.bindings[+e.target.dataset.source].source={kind:'Standard',standard:e.target.value,index:-1};paint();}));
     main.querySelectorAll('[data-target]').forEach(b=>b.addEventListener('change',e=>{const p=edit();if(!p)return;const l=p.layers.find(x=>x.isBaseLayer)||p.layers[0];l.bindings[+e.target.dataset.target].target={kind:'ControllerControl',controllerControl:e.target.value,macroId:null};paint();}));
