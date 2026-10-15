@@ -203,6 +203,7 @@
   }
 
   function renderCommand(category=state.category){
+    window.DKControllerUI?.close();
     state.view='command'; state.category=category||'All';
     setActiveNav(state.category==='All'?{view:'command'}:{category:state.category});
     const list=filteredTools();
@@ -214,6 +215,14 @@
 
   function renderToolDetail(id){
     const t=toolById(id); if(!t)return;
+    if(window.DKControllerUI?.handles(id)){
+      state.view='detail';
+      state.recent=[id,...state.recent.filter(x=>x!==id)].slice(0,12); saveState();
+      setActiveNav({category:t.category});
+      window.DKControllerUI.mount(main,rail,{id,back:()=>renderCommand('Controllers'),toast});
+      return;
+    }
+    window.DKControllerUI?.close();
     state.view='detail';
     state.recent=[id,...state.recent.filter(x=>x!==id)].slice(0,12); saveState();
     setActiveNav({category:t.category});
@@ -232,6 +241,7 @@
   }
 
   function renderSettings(){
+    window.DKControllerUI?.close();
     state.view='settings'; setActiveNav({view:'settings'});
     const rows=settingsRows();
     main.innerHTML=`${hero('Settings','Control the application shell and local interface preferences.','SETTINGS','Your settings.\nStored locally.')}<div class="settings-page"><section class="settings-section"><h2>Appearance & behaviour</h2>${rows.map(r=>`<div class="form-row"><div class="form-copy"><strong>${r[2]}</strong><small>${r[3]}</small></div><button class="toggle ${state.settings[r[0]]?'on':''}" data-setting="${r[0]}" aria-pressed="${state.settings[r[0]]}"></button></div>`).join('')}</section><section class="settings-section"><h2>Privacy & system integrations</h2><div class="form-row"><div class="form-copy"><strong>Account</strong><small>Not required. No account system is configured.</small></div><span class="tag">None</span></div><div class="form-row"><div class="form-copy"><strong>Telemetry</strong><small>No analytics or tracking code is included.</small></div><span class="tag">Off</span></div><div class="form-row"><div class="form-copy"><strong>Start with Windows / updates</strong><small>These are deliberately not exposed as fake toggles in the UI yet. They will be implemented when their Windows backends are built.</small></div><span class="tag">Later</span></div></section></div>`;
@@ -239,6 +249,7 @@
   }
 
   function renderAbout(){
+    window.DKControllerUI?.close();
     state.view='about'; setActiveNav({view:'about'});
     main.innerHTML=`${hero('About','The UI foundation for a free, local-first Windows power-user suite.','ABOUT DK DESKTOP','Small tools.\nMore control.')}<div class="about-card"><div class="about-logo">DK</div><h1>DK Desktop Essentials</h1><p>The Command Center is the main navigation surface. Categories expand in place, pins and favourites stay local, and the current build deliberately avoids pretending that unfinished system integrations already work.</p><div class="about-pills"><span class="about-pill">No account</span><span class="about-pill">No telemetry</span><span class="about-pill">No subscriptions</span><span class="about-pill">Local-first</span><span class="about-pill">Windows 10/11</span></div></div>`;
     renderRail(); bindMain();
