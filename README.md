@@ -33,7 +33,7 @@ dotnet restore .\src\DKDesktopEssentials\DKDesktopEssentials.csproj
 dotnet run --project .\src\DKDesktopEssentials\DKDesktopEssentials.csproj
 ```
 
-A GitHub Actions workflow publishes an x64 Windows build artifact on every push to `main`.
+**LOCAL BUILD ONLY:** compile and package on your Windows computer using .NET/MSBuild. GitHub is used for source control and collaboration. The preserved Windows Actions workflow is manual-only and requires explicit authorisation for each exceptional remote build; pushes and pull requests must not start it. See [local build and packaging commands](docs/local-build-policy.md).
 
 ## Privacy model
 
@@ -42,7 +42,7 @@ The current UI performs no network requests. Preferences such as pins, favourite
 
 ## Controller Hub validation
 
-On Windows x64, run .\scripts\Test-ControllerHub.ps1 to execute both controller suites and produce local JSON results. Windows CI runs the suites against its published helper, checks the release bundle, and uploads test reports separately from the app.
+On Windows x64, run .\scripts\Test-ControllerHub.ps1 locally to execute both controller suites and produce local JSON results. The preserved manual workflow can run equivalent validation only for an explicitly authorised remote-build exception.
 
 See [module scope and test commands](docs/controller-hub-completion.md) and [hardware acceptance](docs/controller-hub-acceptance.md). Optional HIDMaestro/SDL packages are installed only on explicit request, with pinned download hashes; hardware compatibility is not certified by CI.
 

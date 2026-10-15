@@ -1,19 +1,22 @@
-name: Build Windows UI
+name: Manual Windows Build (explicit exception)
 
 on:
-  push:
-    branches:
-      - main
-      - "module/**"
-  pull_request:
-    branches: [main]
+  # LOCAL BUILD ONLY: no automatic push, PR, schedule, release or reusable-workflow triggers.
+  # Dispatch only when the user explicitly authorises this particular remote build.
   workflow_dispatch:
+    inputs:
+      authorize_remote_build:
+        description: 'The user explicitly authorised this particular remote build'
+        type: boolean
+        required: true
+        default: false
 
 permissions:
   contents: read
 
 jobs:
   build:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.authorize_remote_build == true }}
     runs-on: windows-latest
 
     steps:
