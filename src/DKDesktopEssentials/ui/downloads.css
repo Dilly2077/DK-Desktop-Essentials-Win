@@ -114,3 +114,5 @@
 }
 .app-shell.compact .dkd-download{padding:8px 10px}
 .app-shell.reduce-motion .dkd-progress>span{transition:none}
+
+.dkd-load-more{display:block;width:100%;margin:12px 0 3px;text-align:center}
