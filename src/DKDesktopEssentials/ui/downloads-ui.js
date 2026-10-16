@@ -115,7 +115,7 @@
       '<dialog class="dkd-modal" id="dkd-new" aria-labelledby="dkd-new-title"><form id="dkd-form" novalidate>' +
       '<div class="dkd-dialog-head"><h2 id="dkd-new-title">New download</h2><button type="button" data-dkd="close" aria-label="Close dialog">×</button></div>' +
       '<p>' + (demo?'Demo only. The entered URL is never requested or saved.':'Create a direct HTTP/HTTPS download job.') + '</p>' +
-      '<label>Download URL<input id="dkd-url" type="url" autocomplete="off" spellcheck="false" required placeholder="https://example.org/file.zip"></label>' +
+      '<label>Download URL<input id="dkd-url" type="url" autofocus autocomplete="off" spellcheck="false" required placeholder="https://example.org/file.zip"></label>' +
       '<label>Destination folder<div class="dkd-dest"><input id="dkd-destination" type="text" required autocomplete="off" value="C:\\Downloads" aria-describedby="dkd-dest-note">' +
       '<button type="button" data-dkd="browse"' + (caps.browseDestination===false?' disabled title="Native folder selection is unavailable in demo mode."':'') + '>Browse…</button></div></label>' +
       '<small id="dkd-dest-note">' + (demo?'Illustrative path only — no folder is used.':'Folder must be selected or entered explicitly.') + '</small>' +
