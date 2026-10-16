@@ -181,7 +181,7 @@
 
   function toolCard(t){
     const fav=state.favorites.has(t.id), pin=state.pinned.has(t.id), accent=categoryAccent[t.category]||'#4fb8ff';
-    return `<article class="tool-card" data-tool="${t.id}" data-tip="${esc(t.desc)}" style="--accent:${accent}"><div class="tool-icon">${icon(t.icon)}</div><div class="tool-actions"><button class="card-action ${pin?'active':''}" data-pin="${t.id}" aria-label="${pin?'Unpin':'Pin'} ${esc(t.title)}">${icon('pin')}</button><button class="card-action ${fav?'active':''}" data-fav="${t.id}" aria-label="${fav?'Remove from favorites':'Add to favorites'}">${fav?icons.starFill():icon('star')}</button></div><h3>${esc(t.title)}</h3><p>${esc(t.desc)}</p><div class="tag-row">${t.tags.map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}</div></article>`;
+    return `<article class="tool-card" data-tool="${t.id}" ${t.id==='download-manager'?'tabindex="0" role="group" aria-label="Download Manager — press Enter to open"':''} data-tip="${esc(t.desc)}" style="--accent:${accent}"><div class="tool-icon">${icon(t.icon)}</div><div class="tool-actions"><button class="card-action ${pin?'active':''}" data-pin="${t.id}" aria-label="${pin?'Unpin':'Pin'} ${esc(t.title)}">${icon('pin')}</button><button class="card-action ${fav?'active':''}" data-fav="${t.id}" aria-label="${fav?'Remove from favorites':'Add to favorites'}">${fav?icons.starFill():icon('star')}</button></div><h3>${esc(t.title)}</h3><p>${esc(t.desc)}</p><div class="tag-row">${t.tags.map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}</div></article>`;
   }
 
   function filteredTools(){
@@ -273,6 +273,10 @@
       renderCommand(state.category);
     }));
     document.querySelectorAll('.tool-card[data-tool]').forEach(c=>c.addEventListener('click',e=>{if(e.target.closest('[data-fav],[data-pin]'))return;renderToolDetail(c.dataset.tool)}));
+    document.querySelectorAll('.tool-card[data-tool="download-manager"]').forEach(c=>c.addEventListener('keydown',e=>{
+      if(e.target!==c)return;
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();renderToolDetail(c.dataset.tool)}
+    }));
     document.querySelectorAll('[data-fav]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();toggleFavorite(b.dataset.fav)}));
     document.querySelectorAll('[data-pin]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();togglePin(b.dataset.pin)}));
     document.querySelectorAll('[data-setting]').forEach(b=>b.addEventListener('click',()=>toggleSetting(b.dataset.setting)));
