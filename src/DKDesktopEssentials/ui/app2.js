@@ -8,10 +8,10 @@
 
   const categoryAccent = {
     'Controllers':'#58b8ff','Hardware':'#7b6cff','Drivers':'#63aaff','Network':'#59e982',
-    'Files & Media':'#bb73ff','Automation':'#4ab7ff','Privacy & Security':'#54ef89','Utilities':'#71d4ff'
+    'Files & Media':'#bb73ff','Downloads & Transfers':'#55bdff','Automation':'#4ab7ff','Privacy & Security':'#54ef89','Utilities':'#71d4ff'
   };
 
-  const categories = ['Controllers','Hardware','Drivers','Network','Files & Media','Automation','Privacy & Security','Utilities'];
+  const categories = ['Controllers','Hardware','Drivers','Network','Files & Media','Downloads & Transfers','Automation','Privacy & Security','Utilities'];
 
   const tools = [
     {id:'gamepad-tester',title:'Gamepad Tester',category:'Controllers',icon:'gamepad',desc:'Test and calibrate controllers',tags:['Diagnostics','Real-time']},
@@ -55,6 +55,8 @@
     {id:'subtitles',title:'Subtitle Tools',category:'Files & Media',icon:'subtitle',desc:'Edit timing and convert SRT/VTT subtitles',tags:['Subtitles','Timing']},
     {id:'screenshot',title:'Screenshot / Annotation',category:'Files & Media',icon:'screenshot',desc:'Capture, crop, blur and annotate screenshots',tags:['Capture','Annotate']},
     {id:'ocr',title:'OCR (Text Extractor)',category:'Files & Media',icon:'ocr',desc:'Extract selectable text from images and scans',tags:['OCR','Local-first']},
+
+    {id:'download-manager',title:'Download Manager',category:'Downloads & Transfers',icon:'download',desc:'Direct downloads, progress, queues and recovery',tags:['Downloads','Local-first']},
 
     {id:'macro',title:'Macro Engine',category:'Automation',icon:'gear',desc:'Record and automate repetitive local actions',tags:['Automation','Scripting']},
     {id:'macro-service',title:'Macro Deck Service',category:'Automation',icon:'phoneAction',desc:'Receive trusted actions from paired local devices',tags:['LAN','Actions']},
@@ -195,7 +197,7 @@
   function groupMarkup(category,list){
     if(!list.length) return '';
     const accent=categoryAccent[category]||'#4fb8ff';
-    const groupIcon={Controllers:'gamepad',Hardware:'chip',Drivers:'drive',Network:'globe','Files & Media':'folder',Automation:'play','Privacy & Security':'shield',Utilities:'wrench'}[category]||'grid';
+    const groupIcon={Controllers:'gamepad',Hardware:'chip',Drivers:'drive',Network:'globe','Files & Media':'folder','Downloads & Transfers':'download',Automation:'play','Privacy & Security':'shield',Utilities:'wrench'}[category]||'grid';
     const expanded=state.expanded.has(category)||state.category===category||!!state.query.trim();
     const items=expanded?list:list.slice(0,4);
     const canExpand=list.length>4;
@@ -203,6 +205,7 @@
   }
 
   function renderCommand(category=state.category){
+    window.DKDownloadsUI?.dispose();
     state.view='command'; state.category=category||'All';
     setActiveNav(state.category==='All'?{view:'command'}:{category:state.category});
     const list=filteredTools();
@@ -214,9 +217,15 @@
 
   function renderToolDetail(id){
     const t=toolById(id); if(!t)return;
+    window.DKDownloadsUI?.dispose();
     state.view='detail';
     state.recent=[id,...state.recent.filter(x=>x!==id)].slice(0,12); saveState();
     setActiveNav({category:t.category});
+    if(id==='download-manager'){
+      window.DKDownloadsUI.mount(main,{onBack:()=>renderCommand('Downloads & Transfers')});
+      renderRail();
+      return;
+    }
     const accent=categoryAccent[t.category]||'#4fb8ff';
     main.innerHTML=`<div class="tool-detail"><button class="view-all" data-back-category="${esc(t.category)}">← Back to ${esc(t.category)}</button><div class="detail-hero" style="--accent:${accent}"><div class="detail-icon">${icon(t.icon)}</div><div><div class="eyebrow">${esc(t.category)}</div><h1>${esc(t.title)}</h1><p>${esc(t.desc)}</p></div></div><div class="privacy-banner"><span class="ri-icon">${icon('shield')}</span><div><strong>UI scaffold only — no system changes are performed yet.</strong><br><small>This module is present so we can build each feature into the finished shell later.</small></div></div><div class="detail-tabs"><button class="detail-tab active">Overview</button><button class="detail-tab">Settings</button><button class="detail-tab">History</button><button class="detail-tab">About this tool</button></div><section class="placeholder-panel"><h2>${esc(t.title)}</h2><p style="color:#94aabc">The interface foundation is ready for the real module implementation.</p><div class="placeholder-grid"><div class="placeholder-box"><h3>Primary controls</h3><p>Controls and actions for ${esc(t.title)} will be connected here when this module is implemented.</p></div><div class="placeholder-box"><h3>Status & diagnostics</h3><p>Live state, validation and system feedback will appear here without background telemetry.</p></div><div class="placeholder-box"><h3>Local settings</h3><p>Module settings will stay on this PC and remain independent of any DK account.</p></div></div></section></div>`;
     renderRail(); bindMain();
@@ -304,6 +313,7 @@
   }
 
   function routeView(view){
+    window.DKDownloadsUI?.dispose();
     state.query='';
     if(view==='settings') renderSettings();
     else if(view==='about') renderAbout();
@@ -327,7 +337,7 @@
       if(state.view!=='command') renderCommand('All');
       requestAnimationFrame(()=>{const input=document.getElementById('global-search');input?.focus();input?.select()});
     }
-    if(e.key==='Escape'&&state.view==='detail') renderCommand(state.category==='All'?'All':state.category);
+    if(e.key==='Escape'&&state.view==='detail'&&!window.DKDownloadsUI?.hasOpenDialog()) renderCommand(state.category==='All'?'All':state.category);
   });
 
   hydrateIcons();
