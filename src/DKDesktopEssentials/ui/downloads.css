@@ -58,7 +58,7 @@
 .dkd-metrics{display:flex;gap:12px;flex-wrap:wrap;color:#9fb9ca;font-size:10px}
 .dkd-controls{display:flex;gap:5px;flex-wrap:wrap}
 .dkd-action{padding:5px 9px;font-size:10px;min-height:29px}
-.dkd-action:disabled{display:none}
+.dkd-action:disabled{display:inline-flex;align-items:center;opacity:.44;border-style:dashed}
 .dkd-info-button{border-color:#275f84;color:#9cd6fc}
 .dkd-details{border-top:1px solid #284c62;margin-top:12px;padding:12px 2px 2px}
 .dkd-details dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:20px;row-gap:10px;margin:0}
