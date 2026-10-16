@@ -78,6 +78,7 @@
     const demo=caps.mode==='mock';
     const counts=core.summary(jobs);
     const matched=core.filter(jobs,instance.query,instance.filter);
+    const shown=matched.slice(0,instance.limit);
     let content='';
     if (instance.loading) content='<div class="dkd-notice" role="status">Loading download jobs…</div>';
     else if (instance.loadError) content='<div class="dkd-error" role="alert">' + h(instance.loadError) +
@@ -86,7 +87,8 @@
       '<h3>' + (jobs.length?'No matching downloads':'No downloads yet') + '</h3><p>' +
       (jobs.length?'Try another status or clear the search.':'Use New download to create a job. In demo mode, no file is saved.') +
       '</p>' + (jobs.length?'<button type="button" class="dkd-soft" data-dkd="clear">Clear filters</button>':'') + '</div>';
-    else content='<div class="dkd-list" aria-label="Download jobs">' + matched.map(j=>row(j,caps,instance.expanded===j.id)).join('') + '</div>';
+    else content='<div class="dkd-list" aria-label="Download jobs">' + shown.map(j=>row(j,caps,instance.expanded===j.id)).join('') + '</div>' +
+      (shown.length<matched.length?'<button type="button" class="dkd-soft dkd-load-more" data-dkd="more">Show next 50 (' + (matched.length-shown.length) + ' remaining)</button>':'');
     const banner=demo ?
       '<div class="dkd-banner" role="note"><strong>DEMO MODE · simulated downloads</strong><span>These are test records. No network requests, disk writes or real downloads occur.</span></div>' :
       '<div class="dkd-banner" role="note"><strong>Native download manager</strong><span>Actions use the connected local backend.</span></div>';
@@ -109,7 +111,7 @@
       (demo?'<div class="dkd-demo-controls"><span>Demo scenarios</span><label><span class="dkd-visually-hidden">Scenario</span><select data-dkd="scenario">' +
         ['mixed','empty','missing','many'].map(x=>'<option value="' + x + '"' + (instance.scenario===x?' selected':'') + '>' + x + '</option>').join('') +
         '</select></label><button type="button" class="dkd-soft" data-dkd="advance">Advance demo +10s</button></div>':'') +
-      '<div class="dkd-list-heading"><strong>Downloads</strong><span>' + matched.length + ' shown</span></div>' + content +
+      '<div class="dkd-list-heading"><strong>Downloads</strong><span>' + shown.length + ' of ' + matched.length + ' shown</span></div>' + content +
       '<dialog class="dkd-modal" id="dkd-new" aria-labelledby="dkd-new-title"><form id="dkd-form" novalidate>' +
       '<div class="dkd-dialog-head"><h2 id="dkd-new-title">New download</h2><button type="button" data-dkd="close" aria-label="Close dialog">×</button></div>' +
       '<p>' + (demo?'Demo only. The entered URL is never requested or saved.':'Create a direct HTTP/HTTPS download job.') + '</p>' +
@@ -234,7 +236,8 @@
       const {verb,id}=i.confirm;closeDialogs(i);execute(i,verb,id);return;
     }
     if (action==='refresh') {i.loading=true;i.message='';render(i,false);refresh(i);return;}
-    if (action==='clear') {i.filter='all';i.query='';render(i,false);return;}
+    if (action==='clear') {i.filter='all';i.query='';i.limit=50;render(i,false);return;}
+    if (action==='more') {i.limit+=50;render(i,false);return;}
     if (action==='advance') {i.adapter.advance(10);return;}
     if (action==='browse') {
       i.adapter.chooseFolder().then(path=>{
@@ -242,23 +245,23 @@
       }).catch(e=>{const box=i.host.querySelector('#dkd-form-error');if(box)box.textContent=e.message;});
       return;
     }
-    if (clicked?.dataset.dkdFilter) {i.filter=clicked.dataset.dkdFilter;render(i,false);}
+    if (clicked?.dataset.dkdFilter) {i.filter=clicked.dataset.dkdFilter;i.limit=50;render(i,false);}
   }
   function mount(host,{adapter,onBack}={}) {
     if (!(host && typeof host.addEventListener==='function')) throw new Error('A host element is required.');
     dispose();
     adapter=adapter||mock?.createMockAdapter();
     if (!adapter) throw new Error('The demo adapter is not available.');
-    const i={host,adapter,onBack,jobs:[],query:'',filter:'all',expanded:null,loading:true,
+    const i={host,adapter,onBack,jobs:[],query:'',filter:'all',expanded:null,limit:50,loading:true,
       message:'',error:false,loadError:null,request:0,dead:false,busy:false,confirm:null,scenario:'mixed'};
     instance=i;
     i.onClick=e=>handler(i,e);
     i.onInput=e=>{
-      if (e.target.id==='dkd-search') {i.query=e.target.value;render(i,true);}
+      if (e.target.id==='dkd-search') {i.query=e.target.value;i.limit=50;render(i,true);}
       else if (e.target.id==='dkd-url'||e.target.id==='dkd-filename') preview(i);
     };
     i.onChange=e=>{
-      if (e.target.dataset.dkd==='scenario') {i.scenario=e.target.value;i.expanded=null;i.adapter.setScenario(i.scenario);}
+      if (e.target.dataset.dkd==='scenario') {i.scenario=e.target.value;i.expanded=null;i.limit=50;i.adapter.setScenario(i.scenario);}
     };
     i.onSubmit=e=>{
       if(e.target.id!=='dkd-form')return;
