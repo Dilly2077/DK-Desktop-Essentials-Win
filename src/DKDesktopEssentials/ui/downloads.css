@@ -116,3 +116,6 @@
 .app-shell.reduce-motion .dkd-progress>span{transition:none}
 
 .dkd-load-more{display:block;width:100%;margin:12px 0 3px;text-align:center}
+
+/* Keyboard focus for the Module 32 card in the existing Command Center. */
+.tool-card[data-tool="download-manager"]:focus-visible{outline:2px solid #74d0ff;outline-offset:3px}
