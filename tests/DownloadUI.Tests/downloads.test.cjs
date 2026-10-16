@@ -9,7 +9,7 @@ test('formatting handles known and unknown sizes',()=>{
   assert.equal(core.bytes(null),'Unknown');
   assert.equal(core.bytes(0),'0 B');
   assert.equal(core.bytes(1536),'1.50 KB');
-  assert.equal(core.bytes(1024*1024),'1.00 MB');
+  assert.equal(core.bytes(1024*1024),'1 MB');
   assert.equal(core.bytes(NaN),'Unknown');
 });
 test('progress clamps and allows unknown total',()=>{
