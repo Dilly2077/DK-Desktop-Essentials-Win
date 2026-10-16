@@ -29,15 +29,15 @@
     const rem=core.eta(job), eta=rem===null?'—':core.duration(rem);
     const name=job.fileName;
     const controls=[
-      button('start',job.id,'Start',a.start),
-      button('pause',job.id,'Pause',a.pause),
-      button('resume',job.id,'Resume',a.resume,
-        state==='Paused' && job.resumeCapability==='Unsupported'?'The source does not support resuming.':'Resume if supported.'),
-      button('retry',job.id,'Retry',a.retry),
-      button('cancel',job.id,'Cancel',a.cancel),
-      button('openFolder',job.id,'Open folder',a.openFolder,
-        caps.openFolder===false?'Requires the native Windows integration.':'Open containing folder.'),
-      button('remove',job.id,'Remove',a.remove,'Remove the item from this list only.')
+      ...(state==='Queued'?[button('start',job.id,'Start',a.start)]:[]),
+      ...(active||state==='Queued'?[button('pause',job.id,'Pause',a.pause)]:[]),
+      ...(state==='Paused'?[button('resume',job.id,'Resume',a.resume,
+        job.resumeCapability==='Unsupported'?'Resume unavailable: the server does not support continuing this file.':'Resume if supported.')]:[]),
+      ...(state==='Failed'?[button('retry',job.id,'Retry',a.retry)]:[]),
+      ...(state!=='Completed'&&state!=='Cancelled'?[button('cancel',job.id,'Cancel',a.cancel)]:[]),
+      ...(state==='Completed'?[button('openFolder',job.id,'Open folder',a.openFolder,
+        caps.openFolder===false?'Unavailable in demo mode; no file was saved.':'Open the containing folder.')]:[]),
+      ...(!active?[button('remove',job.id,'Remove',a.remove,'Remove the entry without deleting any real file.')]:[])
     ];
     return '<article class="dkd-download" data-job="' + h(job.id) + '">' +
       '<div class="dkd-entry"><div class="dkd-file-icon" aria-hidden="true">↓</div>' +
@@ -51,7 +51,7 @@
       '<span>' + (p===null?'Size unknown':p+'%') + '</span>' +
       '<span>Speed: ' + h(speed) + '</span><span>Remaining: ' + h(eta) + '</span></div>' +
       '<div class="dkd-controls">' +
-      controls.filter((v,i)=>i===6 ? !active : true).join('') +
+      controls.join('') +
       '<button type="button" class="dkd-action dkd-info-button" data-details="' + h(job.id) + '" aria-expanded="' + (expanded?'true':'false') + '" aria-label="Details for ' + h(name) + '">' + (expanded?'Hide details':'Details') + '</button>' +
       '</div></div>' +
       (expanded ? details(job) : '') + '</article>';
