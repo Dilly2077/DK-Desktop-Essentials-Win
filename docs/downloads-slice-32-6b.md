@@ -6,9 +6,10 @@ Updated: 25 October 2026. Scope: Module 32 only.
 coordinator, HTTP engine and protected persistent queue. **Automated-tested:**
 111/111 download tests and 31/31 frontend tests; existing controller regressions
 9/9 and 36/36. **Manual Windows-tested:** the native scenarios below.
-**Release-ready: no.** U24's complete content-width range, U25 at 150%/200%,
-and U29 with a spoken screen reader remain unverified. Windows blocks display
-changes in this remote session. These are acceptance gaps, not passing results.
+**Functional sign-off:** direct-download behavior is implemented and tested; the
+user has chosen to defer remaining resizing and 200% display checks. A spoken
+screen-reader test remains unverified. These checks are not reported as passed,
+and this is not a full accessibility or display-compatibility certification.
 
 ## Integration and source preservation
 
@@ -194,7 +195,7 @@ drive. No production queue data was removed during this resumed acceptance run.
 | U22 | Passed: real Windows picker selects local output directory; frontend shows basename only. Picker cancellation/forged grant automated. |
 | U23 | Passed within scope: cold history/UI loads from bundled local assets without an external asset service; source/CSP/resource policy reviewed. No full runtime traffic audit. |
 | U24 | Partial: actual host minimum 1180-wide window (about 650px usable list), dialog, wide window and maximize checked; narrow byte totals fixed. Complete 320–700px content-width sweep and border-drag resize not certified. |
-| U25 | Partial: native DPI snapshots confirm 100% and 125%, with readable controls/dialogs. 150%/200% blocked: Windows Display settings states it cannot be changed from a remote session. |
+| U25 | Partial: native DPI snapshots confirm 100%, 125% and 150%, with the list and dialog readable at 150% after the window-position fix. The user deferred 200% testing. |
 | U26 | Passed: Tab/Shift+Tab, visible focus and dialog containment checked through actual Windows input. |
 | U27 | Passed: Enter and Space activate focused New download; card keyboard support implemented. |
 | U28 | Passed: Escape closes dialog before page navigation and restores New download focus. |
@@ -259,9 +260,9 @@ resize sweep, 200% scaling and spoken-reader checks remain outstanding. The
 managed Controller Hub regression suite passed 36/36 after the shared-host change.
 
 Native integration has no known failing automated test or unhandled defect in the
-exercised scenarios. The complete manual matrix is **not signed off**. Finish the
-remaining width/resize, 150%/200% and spoken-reader checks on a local interactive
-Windows desktop; rerun any affected scenarios after fixes. Long-duration transfers,
+exercised scenarios. On the user's instruction, the remaining resize and 200%
+display checks are deferred. The complete manual matrix is **not signed off**:
+spoken screen-reader behavior remains unverified. Long-duration transfers,
 public HTTPS/proxy behavior and real hardware storage failures have not all been
 exercised in this UI acceptance session.
 
@@ -279,6 +280,10 @@ locks its directory chain, but does not rehash the entire file, scan for malware
 or certify safety. MOTW and a successful checksum are not malware approval.
 
 No remaining native backend or basic action wiring is deferred to Module 33.
-Module 32 can now be exercised as a native direct-download candidate, but its
-first usable release should remain withheld until the outstanding manual gates
-above pass. Category 7 as a whole remains planned beyond this module.
+Module 32 is signed off for its tested direct-download functionality, subject to
+the explicitly recorded limitations. The remaining screen-reader and deferred
+display checks are not certified. Category 7 remains planned beyond this module.
+
+Functional sign-off rerun: 111/111 download tests and 31/31 frontend tests passed
+locally; the shared checkout also contained separate, uncommitted controller and
+Module 33 work during this rerun. No GitHub Actions builds were run.

@@ -11,8 +11,9 @@ Progress: [32.1 contracts](../downloads-slice-32-1.md), the
 automated-tested. Basic Windows UI queue/pause/restart acceptance passed in 32.5.
 [32.6B native UI integration](../downloads-slice-32-6b.md) is implemented with
 111 download tests, 31 frontend tests and real Windows HTTP/action/restart checks.
-The full content-width range, 150%/200% scaling and spoken screen-reader acceptance
-remain unverified. Module 32 and Category 7 are not release-ready.
+The user deferred the remaining content-width and 200% display checks; spoken
+screen-reader acceptance remains unverified. Module 32 is functionally tested for
+its direct-download scope. Category 7 as a whole is not release-ready.
 
 Source: [full original Download Category Plan](../project-sources/Download_Category_Plan.txt). See also [project source index](../project-sources/README.md) and [Codex overview](../project-overview-for-codex.md).
 
