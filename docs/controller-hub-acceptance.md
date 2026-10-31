@@ -2,6 +2,8 @@
 
 Status: **pending**. CI and test substitutes do not certify physical hardware or target games.
 
+Limited discovery/raw-input smoke now passes on the connected controller using the Windows joystick fallback; see [evidence, backend limits and remaining acceptance](controller-discovery-fix.md). Full acceptance below remains pending. Add `--observe-seconds 30` to the discovery command to record aggregate sample/change counts without saving control values. Fallback devices explicitly report inspection-only output capability and unknown transport/physical identity.
+
 Use a Windows 10/11 x64 machine with controllers you can unplug/reconnect. Record the tested commit, Windows version, controller model, connection mode, driver version, HIDMaestro/SDL version, test time and observations. Keep reports local unless you choose to share them. This procedure does not install or hide devices automatically.
 
 ## Input discovery evidence
