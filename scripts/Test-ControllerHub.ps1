@@ -30,7 +30,14 @@ try {
         if (!(Test-Path -LiteralPath $HelperPath -PathType Leaf)) { throw 'The published output helper is missing.' }
         $fakeDirectory = Join-Path $reportRoot 'fake-sdk'
         Invoke-DotNet -Arguments @('build', 'tests/FakeHidMaestro/FakeHidMaestro.csproj', '-c', 'Release', '-o', $fakeDirectory)
-        $completionArguments += @('--helper', $HelperPath, '--fake-sdk', (Join-Path $fakeDirectory 'HIDMaestro.Core.dll'))
+        $fakeSdk = Join-Path $fakeDirectory 'HIDMaestro.Core.dll'
+        $fixtureDigest = (Get-FileHash -LiteralPath $fakeSdk -Algorithm SHA256).Hash.ToLowerInvariant()
+        $fixturePins = Join-Path $reportRoot 'ProviderPins.Generated.cs'
+        # Only the separate test project compiles this anchor. Production has no test-pin switch.
+        Set-Content -LiteralPath $fixturePins -Value "namespace DKDesktopEssentials.Security; internal static class ProviderPins { internal const string HidMaestroSdkSha256 = `"$fixtureDigest`"; }"
+        $fixtureHostDirectory = Join-Path $reportRoot 'fixture-host'
+        Invoke-DotNet -Arguments @('publish', 'tests/ControllerOutputHost.TestFixture/ControllerOutputHost.TestFixture.csproj', '-c', 'Release', '-r', 'win-x64', '--self-contained', 'true', '-p:PublishReadyToRun=false', "-p:FixturePinsPath=$fixturePins", '-o', $fixtureHostDirectory)
+        $completionArguments += @('--helper', $HelperPath, '--fixture-helper', (Join-Path $fixtureHostDirectory 'DKControllerOutputHost.TestFixture.exe'), '--fake-sdk', $fakeSdk)
     }
     # Run both suites even when one fails so both structured reports are available.
     & dotnet run --project tests/ControllerReliability.Tests/ControllerReliability.Tests.csproj -c Release -- --report (Join-Path $reportRoot 'reliability.json')

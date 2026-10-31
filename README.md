@@ -33,7 +33,7 @@ dotnet restore .\src\DKDesktopEssentials\DKDesktopEssentials.csproj
 dotnet run --project .\src\DKDesktopEssentials\DKDesktopEssentials.csproj
 ```
 
-A GitHub Actions workflow publishes an x64 Windows build artifact on every push to `main`.
+Build and package locally. The Windows workflow is manual-only and requires explicit authorization for a particular remote build; see [local build policy](docs/local-build-policy.md).
 
 ## Privacy model
 
@@ -45,3 +45,5 @@ The current UI performs no network requests. Preferences such as pins, favourite
 On Windows x64, run .\scripts\Test-ControllerHub.ps1 to execute both controller suites and produce local JSON results. Windows CI runs the suites against its published helper, checks the release bundle, and uploads test reports separately from the app.
 
 See [module scope and test commands](docs/controller-hub-completion.md) and [hardware acceptance](docs/controller-hub-acceptance.md). Optional HIDMaestro/SDL packages are installed only on explicit request, with pinned download hashes; hardware compatibility is not certified by CI.
+
+Provider execution uses compiled DLL integrity pins, verified in-memory SDK loading and locked SDL loading. See [security remediation and its remaining acceptance limits](docs/controller-hub-security-remediation.md). Global driver maintenance still requires explicit confirmation and can affect other HIDMaestro clients.

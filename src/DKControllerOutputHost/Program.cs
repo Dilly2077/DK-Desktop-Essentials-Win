@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Security.Principal;
 using System.Text.Json;
+using DKDesktopEssentials.Security;
 
 namespace DKControllerOutputHost;
 
@@ -14,17 +15,27 @@ internal static class Program
         {
             var options = ParseArgs(args);
             var mode = options.GetValueOrDefault("mode") ?? "serve";
+            if (mode is not ("probe" or "install" or "cleanup" or "remove" or "serve"))
+                throw new ArgumentException($"Unknown mode '{mode}'.");
+            if (options.Keys.Any(key => key is not ("mode" or "sdk" or "profile" or "identity" or "acknowledge-global")))
+                throw new ArgumentException("Unsupported helper argument.");
+            if (mode is "install" or "cleanup" or "remove")
+            {
+                if (options.GetValueOrDefault("acknowledge-global") != "true")
+                    throw new ArgumentException("Driver maintenance requires explicit acknowledgment of its global HIDMaestro impact.");
+                if (!IsAdministrator())
+                    throw new InvalidOperationException("Driver maintenance requires explicit administrator approval.");
+            }
             var sdkPath = Require(options, "sdk");
-
-            if (!File.Exists(sdkPath))
-                throw new FileNotFoundException("HIDMaestro.Core.dll was not found.", sdkPath);
-
-            var sdk = new HidMaestroReflection(sdkPath);
+            var verifiedBytes = ProviderIntegrity.ReadVerified(sdkPath, "HIDMaestro.Core.dll", ProviderPins.HidMaestroSdkSha256);
+            var administrator = IsAdministrator();
+            if (administrator) PrivilegedProviderEnvironment.Initialize();
+            var sdk = new HidMaestroReflection(verifiedBytes);
 
             switch (mode)
             {
                 case "probe":
-                    Write(new { type = "probe", ok = true, sdkVersion = sdk.Version, administrator = IsAdministrator() });
+                    Write(new { type = "probe", ok = true, sdkVersion = sdk.Version, administrator, protectedStaging = administrator });
                     return 0;
 
                 case "install":
@@ -91,13 +102,13 @@ internal static class Program
         {
             var arg = args[i];
             if (!arg.StartsWith("--", StringComparison.Ordinal))
-                continue;
+                throw new ArgumentException("Unexpected positional helper argument.");
 
             var key = arg[2..];
             var value = "true";
             if (i + 1 < args.Length && !args[i + 1].StartsWith("--", StringComparison.Ordinal))
                 value = args[++i];
-            result[key] = value;
+            if (!result.TryAdd(key, value)) throw new ArgumentException($"Duplicate --{key} argument.");
         }
 
         return result;
@@ -133,9 +144,9 @@ internal sealed class HidMaestroReflection
     private readonly Type _hatType;
     private readonly Type _helpersType;
 
-    public HidMaestroReflection(string sdkPath)
+    public HidMaestroReflection(byte[] verifiedSdkBytes)
     {
-        _assembly = Assembly.LoadFrom(Path.GetFullPath(sdkPath));
+        _assembly = Assembly.Load(verifiedSdkBytes);
         _contextType = RequireType("HIDMaestro.HMContext");
         _stateType = RequireType("HIDMaestro.HMGamepadState");
         _buttonType = RequireType("HIDMaestro.HMButton");

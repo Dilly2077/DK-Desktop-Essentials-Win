@@ -151,6 +151,8 @@ Virtual-controller compatibility with anti-cheat-protected games must never be p
 
 The controller engine performs no DK telemetry and requires no account. Device state, aliases, defaults, profiles and provider metadata remain local. Network access happens only when the user explicitly installs an optional provider package: HIDMaestro for virtual output or SDL3 for advanced physical features. Each request goes directly to a pinned official GitHub release and the downloaded package is hash-verified before use.
 
+Installed libraries are authenticated at execution against compiled DLL pins. SDK loading consumes verified memory; SDL loading retains file/directory locks until unload. All driver maintenance, including installation, requires `confirmGlobalCleanup: true` and native confirmation. Elevated SDK caches are isolated from user-writable temporary files. See [security implementation and limitations](../../../../../docs/controller-hub-security-remediation.md).
+
 ## Module completion
 
 All seven planned backend slices are implemented. See [completion scope and automated validation](../../../../../docs/controller-hub-completion.md) and the [pending hardware acceptance procedure](../../../../../docs/controller-hub-acceptance.md).

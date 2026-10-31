@@ -31,7 +31,7 @@ Copy this table into a local test record and fill the result column with pass/fa
 | Sleep/resume | Suspend while output is active. On resume, controls should remain safe and require release after a polling gap. Record whether devices retain their IDs. | Not run |
 | SDL sensors/touch | Explicitly install the verified optional backend and link the intended device. Verify gyro, touch contact/release and unsupported-capability reporting. | Not run |
 | Feedback reset | On supported DualSense transport, apply bounded rumble and adaptive triggers, then close the app. Rumble/trigger effects should clear. | Not run |
-| Driver maintenance | Stop outputs before explicit repair/removal; verify the documented reinstall/rollback path. Repair/removal uses upstream global cleanup and can affect other HIDMaestro clients. | Not run |
+| Driver maintenance | Stop outputs before explicit install/repair/removal; verify the documented reinstall/rollback path. All three use upstream global cleanup and can affect other HIDMaestro clients. Validate private elevated cache ownership/permissions, UAC cancellation and offline operation with the real provider. | Not run |
 | Target games | Record physical+virtual duplicate input, layout detection and each game's anti-cheat policy/behavior. Hiding is unavailable and compatibility is never universal. | Not run |
 | Privacy/offline | With optional providers already installed, disconnect the network. Profiles, mapping and status work locally; startup does not download providers or require an account. | Not run |
 
