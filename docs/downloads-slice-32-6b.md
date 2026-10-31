@@ -244,6 +244,12 @@ this is not a confirmed per-monitor DPI acceptance pass. Windows offered 100%,
 125%, 150% and 175%, not 200%. The original 100% setting was restored. Full
 width/resize and spoken screen-reader checks remain outstanding.
 
+A later fresh launch with Windows set to 150% reported WPF DPI 1.5. The
+download list was readable, but the top of the acceptance window was outside
+the captured desktop; this needs investigation and is not a full 150% pass.
+The original 100% Windows setting was restored. The 200% and spoken-reader
+checks are still outstanding.
+
 Native integration has no known failing automated test or unhandled defect in the
 exercised scenarios. The complete manual matrix is **not signed off**. Finish the
 remaining width/resize, 150%/200% and spoken-reader checks on a local interactive
