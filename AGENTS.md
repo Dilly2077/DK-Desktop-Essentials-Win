@@ -28,6 +28,11 @@ The original source index covers **31 modules in six categories**. A proposed **
 
 The two raw planning documents contain some ChatGPT-specific markup. For navigable Markdown, prefer [Downloads roadmap](docs/roadmaps/downloads-and-transfers.md) and [project overview](docs/project-overview-for-codex.md), referring to originals for exact phrasing.
 
+Module 32's native download manager is implemented and automated-tested; its final
+window-size, high-DPI and spoken screen-reader acceptance is not yet complete.
+Consult [Slice 32.6B](docs/downloads-slice-32-6b.md) for current evidence and do
+not mark it release-ready until the outstanding checks have actually passed.
+
 ## Permanent LOCAL BUILD ONLY policy
 
 - All application compilation, packaging and artifact generation must run on the user's computer hosting the active local workspace. This includes EXE, MSI, installers, APK, AAB, desktop/mobile applications and other compiled outputs, regardless of module or feature.

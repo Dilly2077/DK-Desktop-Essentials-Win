@@ -2,7 +2,10 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
+using System.Threading;
+using System.Threading.Tasks;
 using DKDesktopEssentials.Modules.Controllers.ControllerHub;
+using DKDesktopEssentials.Modules.Downloads;
 using Microsoft.Web.WebView2.Core;
 
 namespace DKDesktopEssentials;
@@ -12,11 +15,27 @@ public partial class MainWindow : Window
     private const string AppHost = "dk.local";
     private readonly ControllerHubService _controllerHubService;
     private readonly ControllerHubWebBridge _controllerHubBridge;
+    private readonly DownloadCoordinator _downloads;
+    private readonly DownloadWebBridge _downloadBridge;
+    private readonly string? _webViewDataFolder;
+    private readonly CancellationTokenSource _downloadUpdatesStop = new();
+    private Task _downloadUpdates = Task.CompletedTask;
 
-    public MainWindow()
+    public MainWindow() : this(new DownloadCoordinator(), null) { }
+
+    // The separate local acceptance executable supplies an isolated coordinator
+    // and browser profile. Production has no test-mode commands or flags.
+    internal MainWindow(DownloadCoordinator downloads, string? webViewDataFolder)
     {
         _controllerHubService = new ControllerHubService();
         _controllerHubBridge = new ControllerHubWebBridge(_controllerHubService);
+        _downloads = downloads;
+        _webViewDataFolder = webViewDataFolder;
+        _downloadBridge = new DownloadWebBridge(_downloads, () =>
+        {
+            var picker = new Microsoft.Win32.OpenFolderDialog { Title = "Choose a download destination", Multiselect = false };
+            return System.Threading.Tasks.Task.FromResult(picker.ShowDialog(this) == true ? picker.FolderName : null);
+        });
 
         InitializeComponent();
         Loaded += OnLoaded;
@@ -27,7 +46,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            var userDataFolder = Path.Combine(
+            var userDataFolder = _webViewDataFolder ?? Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "DKDesktopEssentials",
                 "WebView2");
@@ -86,6 +105,7 @@ public partial class MainWindow : Window
             WebView.CoreWebView2.NewWindowRequested += (_, args) => args.Handled = true;
             WebView.CoreWebView2.WebMessageReceived += OnWebMessageReceived;
             WebView.Source = new Uri($"https://{AppHost}/index.html");
+            _downloadUpdates = PublishDownloadUpdatesAsync(_downloadUpdatesStop.Token);
         }
         catch (WebView2RuntimeNotFoundException)
         {
@@ -105,6 +125,26 @@ public partial class MainWindow : Window
                 MessageBoxImage.Error);
             Close();
         }
+    }
+
+    private async Task PublishDownloadUpdatesAsync(CancellationToken token)
+    {
+        // Bounded local notifications. The adapter requests redacted current views;
+        // source URLs, paths, credentials and raw records never enter this event bus.
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(750));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(token))
+            {
+                if (_shutdownStarted) return;
+                if (_downloadBridge.UpdatesRequested && WebView.CoreWebView2 is not null &&
+                    ControllerHubOriginPolicy.IsTrustedDocumentUri(WebView.Source?.AbsoluteUri))
+                    WebView.CoreWebView2.PostWebMessageAsJson("{\"type\":\"downloads:event\",\"reason\":\"refresh\"}");
+            }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+        catch (InvalidOperationException) { /* The view was closed/crashed; do not publish to another document. */ }
+        catch (System.Runtime.InteropServices.COMException) { /* A terminated renderer cannot receive notifications. */ }
     }
 
     private async void OnWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
@@ -130,6 +170,14 @@ public partial class MainWindow : Window
         {
             if (!_shutdownStarted && WebView.CoreWebView2 is not null && deniedResponse is not null)
                 WebView.CoreWebView2.PostWebMessageAsJson(deniedResponse);
+            return;
+        }
+
+        var downloadResponse = await _downloadBridge.HandleAsync(message, e.Source);
+        if (downloadResponse is not null)
+        {
+            if (!_shutdownStarted && WebView.CoreWebView2 is not null)
+                WebView.CoreWebView2.PostWebMessageAsJson(downloadResponse);
             return;
         }
 
@@ -243,8 +291,14 @@ public partial class MainWindow : Window
         if (_shutdownStarted) return;
         _shutdownStarted = true;
         IsEnabled = false;
-        try { await _controllerHubService.DisposeAsync(); }
-        catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Controller shutdown: {ex.Message}"); }
-        finally { _shutdownComplete = true; Close(); }
+        try
+        {
+            _downloadUpdatesStop.Cancel();
+            await _downloadUpdates;
+            try { await _downloads.DisposeAsync(); }
+            finally { await _controllerHubService.DisposeAsync(); }
+        }
+        catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Native shutdown: {ex.GetType().Name}"); }
+        finally { _downloadUpdatesStop.Dispose(); _shutdownComplete = true; Close(); }
     }
 }

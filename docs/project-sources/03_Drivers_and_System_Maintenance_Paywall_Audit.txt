@@ -1,0 +1,269 @@
+DK DESKTOP ESSENTIALS — PROJECT SOURCE TRANSCRIPTION
+Original project attachment: 03_Drivers_and_System_Maintenance_Paywall_Audit(1).docx
+Format: plain-text extraction for Codex; source tables/typography may be flattened.
+Do not confuse planned targets with implemented functionality.
+
+03 Drivers and System Maintenance Paywall Audit
+
+DK'S DESKTOP ESSENTIALS  /  COMPETITIVE PAYWALL AUDIT
+	03
+Drivers & System Maintenance
+Trusted driver discovery, confidence ranking, diagnostics, disk/space/health tooling
+
+
+
+Purpose
+A product-requirements audit of features that current public competitors restrict to paid editions, subscriptions, DLC, or post-trial licences. The aim is to identify features DK’s Desktop can make available locally and free, while avoiding needless duplication of already excellent free/open-source tools.
+Scope note: “Complete” here means all premium-gated features explicitly surfaced by the official pricing/comparison/help pages reviewed for the named competitors. It is not a claim that every software product in the market or every historical feature flag has been enumerated.
+Research cut: 16 September 2026. Prices are snapshots and should be rechecked before implementation or publication.
+
+
+How to read this audit
+	Label
+	Meaning
+
+	PAYWALLED
+	Feature exists in a paid tier, DLC, licence, or only after purchasing the product.
+
+	LIMITED FREE
+	The free edition exposes the feature with a cap, time limit or restricted mode.
+
+	FREE BASELINE
+	A strong free/open-source competitor already offers this capability; DK needs integration/UX/privacy differentiation.
+
+	DK TARGET
+	Feature is a plausible requirement for DK’s free/local implementation; not a promise that implementation is trivial.
+
+	CAUTION
+	Feature may require privileged drivers, third-party codecs, vendor SDKs, licensed databases, or other constraints.
+
+
+
+Category summary
+	DK module
+	Main paywall examples
+	Strong free baseline
+	DK opportunity
+
+	DK's Drivers
+	Driver Easy Pro; Avast Driver Updater; CCleaner Pro
+	Windows Update / OEM tools
+	Very strong - provenance + trust
+
+	Driver Confidence Ranking
+	Commercial updaters obscure ranking logic
+	Windows PnP rank is built in
+	Very strong - transparency is unique
+
+	System Information Export
+	AIDA64 / HWiNFO automation gates
+	Windows msinfo32 / free HWiNFO
+	Strong as shared service
+
+	Disk / Storage Tools
+	TreeSize Personal/Pro; Hard Disk Sentinel Pro
+	WizTree-style/free tools vary
+	Strong if conservative and local
+
+
+
+
+DK's Drivers & Confidence Ranking
+DK module goal. Identify exact hardware locally, search only trusted/official sources, verify signatures/catalogues and rank candidates with an explanation.
+Natural suite links: Hardware Monitor; System Information Export
+Driver Easy Pro
+	Gate
+	Price/model
+	Source
+
+	Free scanner / restricted workflow → annual Pro
+	£29.95/year (1 PC or promotional 3-PC offer shown at research date)
+	Driver Easy purchase page
+
+
+Premium / gated feature inventory
+• Automatic detection of missing, outdated or mismatched drivers.
+• One-click “update all” installation.
+• Certified-driver catalogue access/assurance.
+• Offline scan and download of the correct network driver on another computer.
+• Safe rollback to the previously installed driver.
+• High-speed driver downloads.
+• Automatic Windows restore-point creation.
+• Detailed hardware information (with embedded CPU-Z on current page).
+• Driver backup / restore and full-system backup claims on the current Pro page.
+• Driver uninstall from inside the utility.
+• Automatic Driver Easy application updates.
+• Professional technical support.
+Avast Driver Updater
+	Gate
+	Price/model
+	Source
+
+	30-day trial → annual subscription
+	£38.99/year for 1 Windows PC
+	Avast Driver Updater
+
+
+Premium / gated feature inventory
+• Automatic scan for outdated, corrupt, vulnerable or missing drivers.
+• Automatic/assisted driver update and repair.
+• Driver recommendations from Avast’s driver database.
+• Malware checks on driver packages before installation.
+• Backup of current drivers and rollback/restoration.
+• Troubleshooting assistant for suspected driver problems.
+• User choice over which drivers are installed.
+• One-click scan across broad hardware categories.
+CCleaner Driver Updater
+	Gate
+	Price/model
+	Source
+
+	Free can scan; updates require Professional
+	Included with CCleaner Professional annual licence
+	CCleaner Driver Updater
+
+
+Premium / gated feature inventory
+• Install driver updates (free users can scan but full update functionality is Pro).
+• Automatic scan and simultaneous update workflow.
+• Large driver catalogue matching.
+• Malware screening for downloaded drivers.
+• Rollback / restoration support through previous drivers or Windows restore point.
+• Brand/device-aware driver selection and “alternative driver” workflow described by CCleaner.
+Free baseline / competitive reality
+• Windows Update and the Microsoft Update Catalog are trustworthy baseline sources; OEM utilities from Lenovo/Dell/HP/ASUS/etc. can be preferred for model-specific packages.
+• The DK advantage is not “more drivers”; it is explicit provenance: hardware-ID match, source domain, publisher signature, WHQL/catalogue state, OEM-vs-generic status, supported OS/build and risk tier.
+Recommended DK free/local target
+□ Enumerate PnP devices, exact hardware IDs, compatible IDs, current provider/version/date.
+□ Query Windows Update / Microsoft Catalog and explicitly supported OEM/vendor endpoints directly from the user PC.
+□ Verify Authenticode/catalogue signatures and publisher identity before offering install.
+□ Rank exact OEM match > exact official component-vendor match > trusted compatible match; expose the factors and Windows rank.
+□ Mark generic-vs-OEM driver tradeoffs, especially laptops.
+□ Never recommend unsigned/repacked/mirror packages automatically.
+□ Backup/export current driver package where possible and create restore point before risky changes.
+□ One-click rollback to previous known package.
+□ Firmware/BIOS gets a stricter exact-model/OEM policy and is never silently updated.
+□ User-selectable “search only” mode; installation remains an explicit user action.
+□ No DK hardware inventory upload, account or central entitlement.
+Implementation cautions
+! Direct vendor scraping is brittle. Prefer documented feeds/APIs, Microsoft Update services, or user-directed official download pages.
+! A valid signature proves package integrity/publisher, not that it is the best driver for a particular OEM machine.
+
+System Information Export
+DK module goal. Produce a local, human-readable diagnostic package shared by Drivers, Hardware and Network modules.
+Natural suite links: Drivers; Hardware; Network
+HWiNFO Pro automation
+	Gate
+	Price/model
+	Source
+
+	Manual/free monitoring; automation gates in Pro
+	Pro from $29
+	HWiNFO licences
+
+
+Premium / gated feature inventory
+• Automatic report via command line.
+• Automatic sensor logging via command line.
+• Automatic updates.
+• Unlimited shared-memory access for integrations.
+AIDA64 Extreme / Engineer
+	Gate
+	Price/model
+	Source
+
+	30-day trial → paid
+	$65.95 Extreme; higher business/Engineer tiers
+	AIDA64 comparison
+
+
+Premium / gated feature inventory
+• Extensive hardware and software inventory.
+• Sensor monitoring/logging/alerts.
+• Benchmarks and diagnostics.
+• Engineer/business tiers add command-line/reporting/network-audit/remote/corporate capabilities depending on edition.
+Free baseline / competitive reality
+• Windows msinfo32, dxdiag, pnputil and PowerShell can already export large amounts of system information for free.
+Recommended DK free/local target
+□ One-click redacted support report: OS/build, motherboard/BIOS, CPU/GPU, RAM, storage, devices, drivers, recent driver changes and network adapters.
+□ User can preview every field and deselect serials/MACs/usernames before export.
+□ Plain HTML/JSON/TXT export with no proprietary format.
+□ Optional sensor snapshot and driver mismatch summary.
+□ Copy-safe “support bundle” mode with privacy redaction by default.
+Implementation cautions
+! Do not include unique device identifiers by default.
+
+Disk / Storage Tools
+DK module goal. Explain where disk space is going, identify duplicate candidates, expose disk health and allow safe user-directed cleanup.
+Natural suite links: File Tools; System Information Export
+TreeSize Personal / Professional
+	Gate
+	Price/model
+	Source
+
+	Free basics → paid Personal/Professional
+	Personal from $25.20/user/year; Professional from $49.20/user/year; perpetual options exist
+	TreeSize editions/features
+
+
+Premium / gated feature inventory
+• Top-largest-file filtering and “space hog” identification beyond Free.
+• Duplicate-file search and deduplication.
+• Compare disk-space usage over time.
+• Professional: detailed file-type/owner statistics and filtering.
+• Largest-files list and file-age distribution.
+• Advanced scans of SharePoint, S3, WebDAV, VHDX, Outlook mailboxes, Azure Blob and Linux over SSH.
+• Powerful file search over multiple drives/servers/network.
+• Duplicate search with MD5/SHA256 and hardlink deduplication.
+• Mass archive/copy/move/delete/rename operations.
+• Exports including Excel/HTML/XML/CSV and richer reports.
+• Accurate handling of NTFS hardlinks, Alternate Data Streams and deduplication; NTFS permissions display/export.
+• Scheduled/command-line scans, comparison reports and threshold alerts in Professional.
+Hard Disk Sentinel Standard / Professional
+	Gate
+	Price/model
+	Source
+
+	Trial → Standard / Professional / Enterprise
+	Standard ~$22; Professional ~$33 lifetime; Enterprise higher
+	Hard Disk Sentinel comparison
+
+
+Premium / gated feature inventory
+• Standard gates: hardware short/extended tests; seek/stress tests; text/HTML reports; WebStatus; custom reports/interface; configuration/statistics backup; password protection; rich alerts; daily reports; hotkeys; SMART offset calibration; surface check.
+• Professional-only over Standard: complete surface analysis/refresh/reinitialise/repair; auto-save disk tests/reports; industry-standard data destruction; custom health/temperature thresholds; NAS monitoring; Windows disk-event monitoring; portable version; Quick Fix for weak/problem sectors; device-specific logs; custom alert conditions; connection/disconnection alerts.
+• Professional backup/automation: scheduled backup projects, panic backup on disk problem, CD/DVD/compression workflows, registry export, FTP/email transfer, scheduled hardware tests, service-mode tray/reporting, WMI/XML status for developers.
+• Enterprise-only: remote monitoring, remote disk management/tests/acoustics, remote disk/system info and central logs.
+Free baseline / competitive reality
+• Many excellent free disk visualizers exist; DK should emphasise safe integration, trustworthy explanations and zero cloud rather than claiming storage analysis itself is novel.
+Recommended DK free/local target
+□ Treemap/tree/list views with “largest files” filters.
+□ Duplicate candidate finder using hashes; no auto-delete by default.
+□ File-age/type/category analysis.
+□ Checksums and hardlink-aware accounting.
+□ SMART/health summary using documented OS/vendor interfaces where feasible.
+□ Local history snapshots to compare growth over time.
+□ Safe cleanup suggestions with source/path explanation and undo/recycle-bin preference.
+□ Exportable report and per-volume notes.
+Implementation cautions
+! SMART interpretation and surface-repair features can create false confidence or data risk. Prefer diagnostic visibility; destructive tests require explicit expert mode and backups.
+
+
+
+What this means for DK’s Desktop
+The best DK requirement is not “copy every premium product.” It is to expose the useful local capability without arbitrary quotas, cloud accounts or entitlement checks, while retaining conservative safety boundaries for hardware, drivers and automation.
+• Prefer one shared engine per technical domain (sensor service, input service, LAN pairing, macro engine) so multiple modules do not duplicate privileged background services.
+• If an excellent free/open-source product already dominates the category, differentiate through integration, simpler UX and verifiable local-only behaviour rather than claiming the feature itself is novel.
+• For all risky actions—drivers, fan control, process rules, disk operations—show exactly what will change and provide an explicit revert path.
+
+
+Sources
+Official product, pricing, licensing and support pages were prioritised. Links below are the pages used for this snapshot.
+1. Driver Easy Pro — https://www.drivereasy.com/buy.php?comeid=NavBuyButton
+2. Avast Driver Updater — https://www.avast.com/en-gb/driver-updater
+3. CCleaner Driver Updater — https://www.ccleaner.com/ccleaner/driver-updater
+4. HWiNFO Pro automation — https://www.hwinfo.com/licenses/
+5. AIDA64 Extreme / Engineer — https://www.aida64.com/compare-aida64-features
+6. TreeSize Personal / Professional — https://www.jam-software.com/treesize
+7. Hard Disk Sentinel Standard / Professional — https://www.hdsentinel.com/store.php
+Research snapshot: 16 September 2026  •  Official sources prioritised  •  Pricing/features can change

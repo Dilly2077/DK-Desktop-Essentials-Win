@@ -1,0 +1,273 @@
+I recommend separating development into **backend implementation, UI integration, and real-world testing**, rather than treating a module as finished as soon as its code compiles.
+
+That also gives us a way to distribute work between Chat and Codex without using Codex for tasks that Chat can handle adequately.
+
+I've based this roadmap on your original **31-module master index**, the controller audit documents, and the current GitHub repository.
+
+## 1. Module 1 — What's left?
+
+<row align="center" gap={2}>
+  <badge color="success">7/7 backend slices complete</badge>
+  <text color="secondary" size="xs">Controller Hub / Remapping</text>
+</row>
+
+<box gap={2}>
+  <row align="center" justify="between">
+    <text weight="medium">Backend development</text>
+    <text color="success" weight="medium">Complete</text>
+  </row>
+  <box background="surface-tertiary" height="8px" radius="full" clip>
+    <box width="100%" height="100%" background="rgba(30,160,105,0.9)" radius="full"/>
+  </box>
+  <row align="center" justify="between">
+    <text weight="medium">Automated testing</text>
+    <text color="success" weight="medium">41 tests passed</text>
+  </row>
+  <box background="surface-tertiary" height="8px" radius="full" clip>
+    <box width="100%" height="100%" background="rgba(30,160,105,0.9)" radius="full"/>
+  </box>
+</box>
+
+<text color="secondary" size="xs">These are completion indicators for the planned backend and automated tests, not measures of production readiness.</text>
+
+### Remaining tasks
+
+| Task | What needs doing | Best environment |
+|---|---|---|
+| Controller Hub UI | Connected controllers, status, profile selector and input preview | Chat design → Codex |
+| Profile editor | Button remapping, tuning curves, shift layers, turbo, radial menus and advanced mapping configuration | Codex |
+| Output controls | Start/stop virtual controllers, driver setup, recovery and error messages | Codex |
+| Advanced features UI | Gyroscope, touchpad, rumble, RGB and adaptive trigger configuration | Chat design → Codex |
+| Hardware acceptance | Physical controller testing over USB/Bluetooth, reconnects, virtual output and game compatibility | Local Codex + manual |
+| Compatibility testing | Sleep/resume, multiple controllers, failed drivers, duplicate inputs and anti-cheat limitations | Local Codex + manual |
+| Final polish | Accessibility, performance, documentation, offline/privacy audit and release validation | Chat + Codex |
+
+**Two important boundaries:** physical-controller hiding remains unimplemented pending driver vetting, and execution of macro references belongs to the future Macro Engine. Neither should be mistaken for a missing implementation of Module 1's existing backend.
+
+My recommendation is to **leave Module 1's UI until Module 2's backend is complete**. Both modules use the same controller information, so we can create a unified interface instead of building the UI twice.
+
+There is one exception: run an early physical-controller discovery check before building Module 2, to establish that the existing input provider works on your PC.
+
+---
+
+## 2. Module 2 — Controller Diagnostics
+
+The master index identifies Controller Diagnostics as the second module. Its target features include stick drift diagnosis, button/stick/trigger visualisation, calibration, polling-rate and timing measurements, and battery information.
+
+I recommend **six backend slices**.
+
+<box gap={3}>
+  <row align="center" justify="between">
+    <title size="lg">Proposed Module 2 roadmap</title>
+    <badge>6 slices</badge>
+  </row>
+  <box border radius="lg" gap={0}>
+    {#each [
+      {n:1,name:"Diagnostic Foundation",owner:"Codex",kind:"codex",detail:"Reuse the existing Controller Hub device layer. Add bounded live sampling, device selection, diagnostics sessions, timestamp handling and local API commands.",left:"Slices 2–6; visual UI; real-controller validation."},
+      {n:2,name:"Stick Drift & Input Analysis",owner:"Chat",kind:"chat",detail:"Calculate resting offset, jitter, stick-centre deviation, trigger response, noise and deadzone recommendations from recorded samples. Include synthetic test vectors.",left:"Slices 3–6; visual UI; physical accuracy testing."},
+      {n:3,name:"Polling & Timing Diagnostics",owner:"Codex",kind:"codex",detail:"Measure observed sample intervals, update regularity and timing variability. Avoid advertising these measurements as true end-to-end input latency.",left:"Slices 4–6; visual UI; measured-device timing validation."},
+      {n:4,name:"Calibration Engine",owner:"Chat + Codex",kind:"hybrid",detail:"Develop calibration calculations in Chat, then use Codex to integrate preview, apply and rollback into existing controller profiles. Never silently modify system-wide device settings.",left:"Slices 5–6; visual UI; physical calibration tests."},
+      {n:5,name:"Battery, Health & Reports",owner:"Chat + Codex",kind:"hybrid",detail:"Expose supported connection/battery data, show 'unknown' when unsupported, and create optional local JSON/CSV diagnostic reports without background uploads.",left:"Slice 6; visual UI; device compatibility testing."},
+      {n:6,name:"Reliability & Completion Tests",owner:"Codex",kind:"codex",detail:"Add automated tests for sampled data, analysis accuracy, disconnected controllers, cancellation, memory limits, persistence and integration with Module 1.",left:"Interactive UI, physical hardware acceptance and release polish."}
+    ] as s,i}
+      <box padding={3} gap={2} key={s.n}>
+        <row align="center" justify="between">
+          <row align="center" gap={2}>
+            <box background="surface-tertiary" radius="md" size="32px" align="center" justify="center">
+              <text weight="medium" tabularNums>{s.n}</text>
+            </box>
+            <text weight="medium">{s.name}</text>
+          </row>
+          <badge color={s.kind==="codex"?"info":s.kind==="chat"?"success":"secondary"}>{s.owner}</badge>
+        </row>
+        <text size="sm">{s.detail}</text>
+        <text color="secondary" size="xs">**After Slice {s.n}:** {s.left}</text>
+      </box>
+      {#if i!==5}<divider color="subtle"/>{/if}
+    {/each}
+  </box>
+</box>
+
+### What remains after all six slices?
+
+At that point, Module 2 should have a testable backend. It will still need the diagnostic UI, including live controller diagrams, drift graphs, calibration controls, timing charts and report export screens.
+
+We will also need physical tests using controllers with known behaviour. A synthetic drift sample can prove the maths, but it cannot establish that the app identifies drift accurately on every controller or driver.
+
+The UI can then be developed alongside Module 1's UI.
+
+---
+
+## 3. Which work should be done in Chat versus Codex?
+
+My proposed division is based on what the task requires rather than which tool is theoretically capable of writing it.
+
+<grid columns={2} gap={3}>
+  <grid-item>
+    <box border radius="lg" padding={3} gap={2}>
+      <row align="center" gap={2}>
+        <icon name="message-square-code" color="success"/>
+        **Chat**
+      </row>
+      <text size="sm">Best for self-contained algorithms, profile schemas, deterministic file processing, unit-test vectors, design decisions, code review and targeted GitHub changes.</text>
+    </box>
+  </grid-item>
+  <grid-item>
+    <box border radius="lg" padding={3} gap={2}>
+      <row align="center" gap={2}>
+        <icon name="terminal" color="info"/>
+        **Codex**
+      </row>
+      <text size="sm">Best for substantial multi-file implementation, native Windows APIs, device integration, test execution, debugging and repository-wide changes.</text>
+    </box>
+  </grid-item>
+</grid>
+
+For Module 2, this gives us two primarily Chat-sized slices, three primarily Codex-sized slices and one that deliberately moves between both. That avoids assigning all six slices to separate heavy Codex development sessions.
+
+An important distinction: Chat can edit GitHub code and inspect CI results, but cannot substitute for Windows hardware testing. Also, this is a workload strategy, not a guaranteed calculation of subscription usage.
+
+## 4. Allocation across all 31 modules
+
+Here is the proposed division for the complete suite. **Chat-led** means most core logic could be developed here, while **Codex-led** means native integration or extensive repository work dominates.
+
+| # | Module | Recommended approach |
+|---|---|---|
+| | **Controllers & Gaming Input** | |
+| 1 | Controller Hub | Backend done; hybrid UI and testing |
+| 2 | Controller Diagnostics | Hybrid — six slices above |
+| 3 | Controller → Keyboard/Mouse | Codex-led |
+| 4 | Automatic Game Profiles | Hybrid — Chat rule logic, Codex process integration |
+| 5 | Game Save Manager | Hybrid — Chat definitions, Codex safe backup/restore |
+| 6 | Game Library Aggregator | Codex-led |
+| 7 | FPS / System Overlay | Codex-led |
+| | **Hardware, Performance & Appearance** | |
+| 8 | Hardware Monitor | Codex-led |
+| 9 | Fan Control | Codex-led, safety-critical |
+| 10 | RGB / ScreenSync | Codex-led, Chat for effects algorithms |
+| 11 | Performance / Power Profiles | Codex-led |
+| 12 | Startup / Process Tools | Codex-led |
+| | **Drivers & System Maintenance** | |
+| 13 | DK's Drivers | Codex-led, with manual driver-safety gates |
+| 14 | Driver Confidence Ranking | Chat-led scoring and explanation engine |
+| 15 | System Information Export | Chat-led report generation; Codex Windows collectors |
+| 16 | Disk / Storage Tools | Codex-led, particularly destructive actions |
+| | **Network & Device Bridge** | |
+| 17 | Home Network Dashboard | Codex-led |
+| 18 | Wake-on-LAN / Remote Actions | Hybrid for WOL; Codex for authenticated remote control |
+| 19 | LAN File Transfer / Clipboard | Codex-led |
+| 20 | Phone Remote / Macro Deck | Codex-led |
+| 21 | Phone as Webcam | Codex-led |
+| 22 | Local Screen / Control Streaming | Codex-led |
+| | **Files, Media & Creator Tools** | |
+| 23 | PDF Toolkit | Chat-led processing slices |
+| 24 | Image Toolkit | Chat-led processing slices |
+| 25 | Audio / Video Converter | Codex-led integration, Chat presets |
+| 26 | Subtitle Tools | Chat-led, potentially the entire backend |
+| 27 | Screenshot / Annotation | Codex-led |
+| 28 | OCR | Codex-led engine, Chat for post-processing |
+| | **Automation & Power-User Productivity** | |
+| 29 | Macro Engine | Codex-led, Chat for action definitions |
+| 30 | Macro Deck Desktop Service | Codex-led |
+| 31 | Quick Launcher / Command Palette | Hybrid |
+
+The strongest candidates for completing substantial backend work entirely in Chat are **Driver Confidence Ranking, Subtitle Tools, Image Toolkit and parts of the PDF Toolkit**. System Information Export is another reasonable candidate once the Windows data-collection interface is defined.
+
+Even these will require final UI integration and release tests. They should not be called finished user-facing modules until those steps are complete.
+
+### Dependencies worth planning around
+
+To avoid rebuilding shared components, we should keep several dependencies in mind:
+
+- Modules 1–4 reuse the controller input and profile infrastructure.
+- Modules 7–11 should share hardware telemetry rather than independently poll the same sensors.
+- Modules 13–15 should share hardware identification, provenance and diagnostic-report models.
+- Modules 18–20 and 30 should share a secure LAN pairing and authentication foundation.
+- Modules 23 and 28 can share an OCR pipeline.
+- Module 29's Macro Engine should expose an action interface usable by Modules 1, 4, 20 and 30.
+
+These are implementation recommendations; the original audit describes related capabilities but does not prescribe these exact development stages.
+
+---
+
+## 5. The development order I'd follow
+
+<box gap={3}>
+  <list marker="number" connector="solid" gap={3}>
+    <list-item>
+      **Module 1 — Limited hardware smoke test**
+
+      <text color="secondary" size="sm">Confirm physical controller discovery and basic input on your Windows machine before relying on the device layer for diagnostics.</text>
+    </list-item>
+    <list-item>
+      **Module 2 — Slices 1–6**
+
+      <text color="secondary" size="sm">Alternate Chat and Codex work as specified above. Keep every slice independently testable.</text>
+    </list-item>
+    <list-item>
+      **Combined UI development — Modules 1 and 2**
+
+      <text color="secondary" size="sm">Design the screens in Chat, connect them in Codex, then review usability and functionality.</text>
+    </list-item>
+    <list-item>
+      **Controller acceptance testing**
+
+      <text color="secondary" size="sm">Test real devices and games. Resolve blocking bugs before adding more input features.</text>
+    </list-item>
+    <list-item>
+      **Modules 3 and 4**
+
+      <text color="secondary" size="sm">Controller-to-keyboard/mouse and automatic game profiles can build on the now-tested Controller Hub. Keep Macro Engine execution as a separately tracked dependency.</text>
+    </list-item>
+    <list-item>
+      **Modules 5–31**
+
+      <text color="secondary" size="sm">Continue in category order, while grouping shared infrastructure and using Chat-led implementation wherever platform dependencies permit.</text>
+    </list-item>
+  </list>
+</box>
+
+## 6. A completion report after every slice
+
+I recommend requiring the same completion report from both Chat and Codex. This should also go into the repository documentation, so another development session can pick up without reconstructing the history.
+
+| Status field | What must be recorded |
+|---|---|
+| Implemented | Exact features and files changed |
+| GitHub | Branch, PR, merged commit |
+| Automated tests | Passed, failed or not run |
+| Remaining backend | Outstanding functionality and future slices |
+| UI | Complete, partial or not started |
+| Real-world testing | Hardware/device/manual acceptance status |
+| Known limitations | Compatibility, driver, privacy and safety restrictions |
+| Next action | Specific next slice and whether Chat or Codex should handle it |
+
+No slice should receive a final **Complete** status simply because code was committed. We should distinguish *implemented*, *CI verified*, *hardware verified* and *release ready*.
+
+### Recommended immediate allocation
+
+<box border radius="lg" padding={3} gap={2}>
+  <row align="center" justify="between">
+    <text weight="medium">Module 1</text>
+    <badge color="success">Backend complete</badge>
+  </row>
+  **Remaining:** UI, hardware acceptance, compatibility checks and final release polish.
+
+  <divider color="subtle"/>
+
+  <row align="center" justify="between">
+    <text weight="medium">Module 2</text>
+    <badge>Next</badge>
+  </row>
+  **First task:** Slice 1, Diagnostic Foundation, in Codex.
+
+  <divider color="subtle"/>
+
+  <row align="center" justify="between">
+    <text weight="medium">Following task</text>
+    <badge color="success">Chat</badge>
+  </row>
+  **Module 2, Slice 2:** Drift and input-analysis engine, with deterministic tests.
+</box>
+
+This preserves the original 31-module structure while reserving Codex for the tasks where its direct access to the repository, compiler, Windows environment and testing tools adds the most value.

@@ -2,9 +2,11 @@
 
 A local-first Windows power-user suite. The project is intentionally designed around **no account dependency, no telemetry, no subscriptions, and no artificial feature locks**.
 
-## Current phase: UI foundation and Controller Hub backend
+## Current phase: UI foundation, Controller Hub backend and direct downloads
 
 This repository contains the application shell, interactive UI foundation, and the Controller Hub backend through its seven planned slices. Controller Hub has automated mapping, persistence, bridge, reliability and packaged-helper tests; visible editor integration and physical hardware/game acceptance remain pending. Other tool modules will be added incrementally.
+
+Downloads & Transfers includes HTTP/HTTPS downloads through **Download Manager**, with a protected local SQLite queue, configurable concurrency, bounded retries, validated pause/resume and optional parallel range reads. The 32.6 interface now uses the native backend after a capability handshake. Choose a native destination folder, enter a URL and filename, then start or retain a held queue entry. Servers must prove a partial file is unchanged before reuse. See [32.6B integration and Windows acceptance](docs/downloads-slice-32-6b.md): native action/restart tests pass; the complete width range, 150%/200% scaling and spoken screen-reader acceptance remain pending. Module 32 is not yet release-ready.
 
 ### UI goals
 
@@ -37,7 +39,7 @@ dotnet run --project .\src\DKDesktopEssentials\DKDesktopEssentials.csproj
 
 ## Privacy model
 
-The current UI performs no network requests. Preferences such as pins, favourites and layout choices are stored locally in the WebView2 profile/local storage on the user's machine.
+The bundled UI requires no external network assets. Native HTTP/HTTPS downloads run after explicit submission; source URLs are retained in a current-user DPAPI-protected local store for recovery and excluded from returned job views. Preferences such as pins, favourites and layout choices are stored locally in the WebView2 profile/local storage on the user's machine. See the [download privacy boundaries and limitations](docs/downloads-slice-32-6b.md).
 
 
 ## Controller Hub validation

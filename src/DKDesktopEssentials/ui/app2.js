@@ -7,13 +7,14 @@
   const toastRegion = document.getElementById('toast-region');
 
   const categoryAccent = {
-    'Controllers':'#58b8ff','Hardware':'#7b6cff','Drivers':'#63aaff','Network':'#59e982',
+    'Controllers':'#58b8ff','Hardware':'#7b6cff','Drivers':'#63aaff','Network':'#59e982','Downloads & Transfers':'#58c9ed',
     'Files & Media':'#bb73ff','Automation':'#4ab7ff','Privacy & Security':'#54ef89','Utilities':'#71d4ff'
   };
 
-  const categories = ['Controllers','Hardware','Drivers','Network','Files & Media','Automation','Privacy & Security','Utilities'];
+  const categories = ['Controllers','Hardware','Drivers','Network','Downloads & Transfers','Files & Media','Automation','Privacy & Security','Utilities'];
 
   const tools = [
+    {id:'download-manager',title:'Download Manager',category:'Downloads & Transfers',icon:'download',desc:'Download HTTP and HTTPS files with a local queue, retries and validated resume',tags:['Direct links','Local queue']},
     {id:'gamepad-tester',title:'Gamepad Tester',category:'Controllers',icon:'gamepad',desc:'Test and calibrate controllers',tags:['Diagnostics','Real-time']},
     {id:'controller-mapper',title:'Controller Mapper',category:'Controllers',icon:'share',desc:'Remap buttons and create controller profiles',tags:['Mapping','Profiles']},
     {id:'input-monitor',title:'Input Monitor',category:'Controllers',icon:'bars',desc:'Live input visualization and polling checks',tags:['Real-time','Diagnostics']},
@@ -179,7 +180,7 @@
 
   function toolCard(t){
     const fav=state.favorites.has(t.id), pin=state.pinned.has(t.id), accent=categoryAccent[t.category]||'#4fb8ff';
-    return `<article class="tool-card" data-tool="${t.id}" data-tip="${esc(t.desc)}" style="--accent:${accent}"><div class="tool-icon">${icon(t.icon)}</div><div class="tool-actions"><button class="card-action ${pin?'active':''}" data-pin="${t.id}" aria-label="${pin?'Unpin':'Pin'} ${esc(t.title)}">${icon('pin')}</button><button class="card-action ${fav?'active':''}" data-fav="${t.id}" aria-label="${fav?'Remove from favorites':'Add to favorites'}">${fav?icons.starFill():icon('star')}</button></div><h3>${esc(t.title)}</h3><p>${esc(t.desc)}</p><div class="tag-row">${t.tags.map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}</div></article>`;
+    return `<article class="tool-card" data-tool="${t.id}" ${t.id==='download-manager'?'tabindex="0" aria-label="Open Download Manager"':''} data-tip="${esc(t.desc)}" style="--accent:${accent}"><div class="tool-icon">${icon(t.icon)}</div><div class="tool-actions"><button class="card-action ${pin?'active':''}" data-pin="${t.id}" aria-label="${pin?'Unpin':'Pin'} ${esc(t.title)}">${icon('pin')}</button><button class="card-action ${fav?'active':''}" data-fav="${t.id}" aria-label="${fav?'Remove from favorites':'Add to favorites'}">${fav?icons.starFill():icon('star')}</button></div><h3>${esc(t.title)}</h3><p>${esc(t.desc)}</p><div class="tag-row">${t.tags.map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}</div></article>`;
   }
 
   function filteredTools(){
@@ -203,6 +204,7 @@
   }
 
   function renderCommand(category=state.category){
+    window.DKDownloadsHost?.dispose();
     state.view='command'; state.category=category||'All';
     setActiveNav(state.category==='All'?{view:'command'}:{category:state.category});
     const list=filteredTools();
@@ -214,9 +216,14 @@
 
   function renderToolDetail(id){
     const t=toolById(id); if(!t)return;
+    window.DKDownloadsHost?.dispose();
     state.view='detail';
     state.recent=[id,...state.recent.filter(x=>x!==id)].slice(0,12); saveState();
     setActiveNav({category:t.category});
+    if(id==='download-manager'){
+      window.DKDownloadsHost.mount(main,{onBack:()=>renderCommand('Downloads & Transfers')});
+      renderRail(); return;
+    }
     const accent=categoryAccent[t.category]||'#4fb8ff';
     main.innerHTML=`<div class="tool-detail"><button class="view-all" data-back-category="${esc(t.category)}">← Back to ${esc(t.category)}</button><div class="detail-hero" style="--accent:${accent}"><div class="detail-icon">${icon(t.icon)}</div><div><div class="eyebrow">${esc(t.category)}</div><h1>${esc(t.title)}</h1><p>${esc(t.desc)}</p></div></div><div class="privacy-banner"><span class="ri-icon">${icon('shield')}</span><div><strong>UI scaffold only — no system changes are performed yet.</strong><br><small>This module is present so we can build each feature into the finished shell later.</small></div></div><div class="detail-tabs"><button class="detail-tab active">Overview</button><button class="detail-tab">Settings</button><button class="detail-tab">History</button><button class="detail-tab">About this tool</button></div><section class="placeholder-panel"><h2>${esc(t.title)}</h2><p style="color:#94aabc">The interface foundation is ready for the real module implementation.</p><div class="placeholder-grid"><div class="placeholder-box"><h3>Primary controls</h3><p>Controls and actions for ${esc(t.title)} will be connected here when this module is implemented.</p></div><div class="placeholder-box"><h3>Status & diagnostics</h3><p>Live state, validation and system feedback will appear here without background telemetry.</p></div><div class="placeholder-box"><h3>Local settings</h3><p>Module settings will stay on this PC and remain independent of any DK account.</p></div></div></section></div>`;
     renderRail(); bindMain();
@@ -264,6 +271,9 @@
       renderCommand(state.category);
     }));
     document.querySelectorAll('.tool-card[data-tool]').forEach(c=>c.addEventListener('click',e=>{if(e.target.closest('[data-fav],[data-pin]'))return;renderToolDetail(c.dataset.tool)}));
+    document.querySelectorAll('.tool-card[data-tool="download-manager"]').forEach(c=>c.addEventListener('keydown',e=>{
+      if(e.target===c&&(e.key==='Enter'||e.key===' ')){e.preventDefault();renderToolDetail(c.dataset.tool)}
+    }));
     document.querySelectorAll('[data-fav]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();toggleFavorite(b.dataset.fav)}));
     document.querySelectorAll('[data-pin]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();togglePin(b.dataset.pin)}));
     document.querySelectorAll('[data-setting]').forEach(b=>b.addEventListener('click',()=>toggleSetting(b.dataset.setting)));
@@ -304,6 +314,7 @@
   }
 
   function routeView(view){
+    window.DKDownloadsHost?.dispose();
     state.query='';
     if(view==='settings') renderSettings();
     else if(view==='about') renderAbout();
@@ -327,7 +338,7 @@
       if(state.view!=='command') renderCommand('All');
       requestAnimationFrame(()=>{const input=document.getElementById('global-search');input?.focus();input?.select()});
     }
-    if(e.key==='Escape'&&state.view==='detail') renderCommand(state.category==='All'?'All':state.category);
+    if(e.key==='Escape'&&state.view==='detail'&&!window.DKDownloadsUI?.hasOpenDialog()) renderCommand(state.category==='All'?'All':state.category);
   });
 
   hydrateIcons();

@@ -1,0 +1,380 @@
+DK DESKTOP ESSENTIALS — PROJECT SOURCE TRANSCRIPTION
+Original project attachment: 05_Files_Media_and_Creator_Tools_Paywall_Audit(1).docx
+Format: plain-text extraction for Codex; source tables/typography may be flattened.
+Do not confuse planned targets with implemented functionality.
+
+05 Files Media and Creator Tools Paywall Audit
+
+DK'S DESKTOP ESSENTIALS  /  COMPETITIVE PAYWALL AUDIT
+	05
+Files, Media & Creator Tools
+PDF, image, video/audio, subtitles, screenshots and OCR
+
+
+
+Purpose
+A product-requirements audit of features that current public competitors restrict to paid editions, subscriptions, DLC, or post-trial licences. The aim is to identify features DK’s Desktop can make available locally and free, while avoiding needless duplication of already excellent free/open-source tools.
+Scope note: “Complete” here means all premium-gated features explicitly surfaced by the official pricing/comparison/help pages reviewed for the named competitors. It is not a claim that every software product in the market or every historical feature flag has been enumerated.
+Research cut: 16 September 2026. Prices are snapshots and should be rechecked before implementation or publication.
+
+
+How to read this audit
+	Label
+	Meaning
+
+	PAYWALLED
+	Feature exists in a paid tier, DLC, licence, or only after purchasing the product.
+
+	LIMITED FREE
+	The free edition exposes the feature with a cap, time limit or restricted mode.
+
+	FREE BASELINE
+	A strong free/open-source competitor already offers this capability; DK needs integration/UX/privacy differentiation.
+
+	DK TARGET
+	Feature is a plausible requirement for DK’s free/local implementation; not a promise that implementation is trivial.
+
+	CAUTION
+	Feature may require privileged drivers, third-party codecs, vendor SDKs, licensed databases, or other constraints.
+
+
+
+Category summary
+	DK module
+	Main paywall examples
+	Strong free baseline
+	DK opportunity
+
+	PDF Toolkit
+	Adobe Acrobat; PDF-XChange licensed features
+	PDFsam/basic open tools
+	Strong - local/no upload
+
+	Image Toolkit
+	PhotoScape X Pro / paid utilities
+	FastStone personal; XnConvert/ImageMagick
+	Medium - free baseline strong
+
+	Audio / Video Converter
+	UniConverter; Movavi Video Converter
+	FFmpeg; HandBrake
+	Medium - UI/integration, not codec novelty
+
+	Subtitle Tools
+	AI subtitle products / paid media suites
+	Subtitle Edit / Aegisub
+	Low-Medium - free baseline excellent
+
+	Screenshot / Annotation
+	Snagit; Screenpresso Pro
+	ShareX
+	Strong if polished + local
+
+	OCR
+	ABBYY FineReader; Acrobat Pro; PDF-XChange Plus
+	Tesseract / OCRmyPDF
+	Strong if accuracy/local pipeline is good
+
+
+
+
+PDF Toolkit
+DK module goal. Local merge/split/rotate/compress/sign/OCR/edit workflows with no upload and no feature watermark.
+Natural suite links: OCR; Image Toolkit; Scanner
+Adobe Acrobat Standard / Pro
+	Gate
+	Price/model
+	Source
+
+	Reader free → Standard/Pro subscriptions
+	UK plans around £14.99/mo Standard and £19.97/mo Pro annual commitment in current pricing
+	Adobe Acrobat pricing/compare
+
+
+Premium / gated feature inventory
+• Edit PDF text and images.
+• Create PDFs and convert/export PDFs to Office/image formats.
+• Organize pages: combine, reorder, delete, rotate and related document assembly.
+• Protect PDFs/password/security controls.
+• Fill/sign and collect binding e-signatures; track responses.
+• Pro: redact sensitive content.
+• Pro: compare documents.
+• Pro: turn scans into editable/searchable PDFs with OCR.
+• Pro: create web forms and broader advanced PDF workflows.
+• Separate PDF Pack subscription gates conversion, combining, page organisation and fill/sign/share workflows for users who do not buy full Acrobat.
+PDF-XChange Editor / Editor Plus
+	Gate
+	Price/model
+	Source
+
+	>70% free; licensed functions watermark output; Plus adds advanced features
+	Perpetual licence model with maintenance options
+	PDF-XChange limitations/comparison
+
+
+Premium / gated feature inventory
+• Licensed functions can be tried in the free build but apply evaluation watermarks to output.
+• Licensed feature set includes advanced base-content editing, page/document manipulation, security/encryption, redaction/sanitization, document conversion/export and various automation/batch features shown in the official comparison chart.
+• Editor Plus adds Enhanced OCR.
+• Editor Plus adds creation/editing of fillable forms and form-recognition workflows.
+• Editor Plus adds dynamic stamps and document-comparison features in current product materials.
+Free baseline / competitive reality
+• Several free tools cover merge/split/rotate well; the real user pain is that advanced editing/OCR/redaction/forms/conversion are often the paid boundary.
+Recommended DK free/local target
+□ Merge, split, reorder, rotate, extract, insert and delete pages.
+□ Compress/optimize images/fonts/metadata with preview.
+□ Watermark, headers/footers, page numbers and Bates-style numbering.
+□ Fill forms and place signatures locally.
+□ Password encryption/decryption where user has authority; permissions display.
+□ Redaction that actually removes underlying content.
+□ Basic text/image content editing where feasible.
+□ OCR to searchable PDF; deskew/rotate/cleanup pipeline.
+□ PDF↔image and Office-compatible conversion where open libraries permit.
+□ Metadata inspection/removal and sanitize pass.
+□ No watermark, page cap or upload requirement.
+Implementation cautions
+! Office-format conversion fidelity and general PDF text editing are much harder than merge/split. Treat them as later milestones.
+
+Image Toolkit
+DK module goal. Batch local resize/crop/compress/convert/metadata tools rather than a Photoshop replacement.
+Natural suite links: Screenshot; PDF; OCR
+PhotoScape X Pro
+	Gate
+	Price/model
+	Source
+
+	Free edition + paid Pro edition
+	Paid Pro version via platform stores
+	PhotoScape X official
+
+
+Premium / gated feature inventory
+• The vendor offers a paid Pro edition alongside the free app. Its broader feature family includes advanced editor/filter/effect, batch, project and image-composition workflows; the official landing page does not expose a clean text feature-by-feature Free-vs-Pro table, so specific Pro-only items should be revalidated in-app/store before using them as requirements.
+FastStone Image Viewer / Photo Resizer commercial licence
+	Gate
+	Price/model
+	Source
+
+	Free personal/education; paid commercial use
+	Image Viewer $34.95 one-time commercial licence; Photo Resizer $19.95
+	FastStone licensing
+
+
+Premium / gated feature inventory
+• Feature set is not technically paywalled for personal users; commercial use requires a licence. The free personal feature set already includes powerful batch conversion/rename, resize, crop, metadata, comparisons, annotation and many formats.
+Free baseline / competitive reality
+• FastStone, XnConvert, ImageMagick and other free tools make “batch image conversion” itself a weak differentiator.
+• DK can still win through a simpler shared local pipeline, consistent UI, privacy status and integration with Screenshot/PDF/OCR.
+Recommended DK free/local target
+□ Batch resize with fit/fill/stretch/crop modes.
+□ JPG/PNG/WebP/AVIF/HEIC conversion where codecs permit.
+□ Quality/size target and live estimate.
+□ Rotate/flip/crop; basic brightness/contrast/saturation/sharpness.
+□ Metadata view plus remove-all/EXIF/GPS/camera-info choices.
+□ Watermark text/image with positioning/opacity.
+□ Batch rename and social/preset dimensions.
+□ Before/after preview and queue with no item limit.
+□ Local processing and readable export log.
+Implementation cautions
+! HEIC/AVIF codec licensing/availability varies by platform/library. Keep codec modules replaceable.
+
+Audio / Video Converter & Subtitle Tools
+DK module goal. Friendly local FFmpeg-style conversion/compression/audio extraction with subtitle edit/burn-in.
+Natural suite links: Subtitle Tools; Screenshot Recorder
+Wondershare UniConverter
+	Gate
+	Price/model
+	Source
+
+	Trial limits → paid
+	Subscription/perpetual options vary by region/version
+	UniConverter official product page
+
+
+Premium / gated feature inventory
+• Full-length video/audio conversion across 1,000+ formats and large batch jobs (trial is limited).
+• 4K/8K/HDR conversion and high-speed conversion acceleration.
+• Advanced video compression.
+• Screen/app/meeting recording at high resolution/framerate.
+• Video editing/toolbox features.
+• AI video enhancement/upscaling, denoise and frame-rate enhancement.
+• AI subtitle generation and translation.
+• Video summarization.
+• Watermark/object removal.
+• Image enhancement / old-photo restoration and other AI tools.
+Movavi Video Converter
+	Gate
+	Price/model
+	Source
+
+	Paid product / trial
+	$54.95/year shown in current comparison
+	Movavi “help me choose”
+
+
+Premium / gated feature inventory
+• Unlimited local media conversion/compression versus online free limits.
+• AI video upscaling up to 8×.
+• No file/size limit.
+• Crop/rotate, filters and enhancement before conversion.
+• Bulk conversion.
+• Find/add subtitles to videos.
+Free baseline / competitive reality
+• FFmpeg and HandBrake already provide an extremely capable free/local engine; Subtitle Edit provides a strong free subtitle editor. DK should primarily provide workflow/UI and suite integration.
+• Cloud AI transcription/translation has recurring compute cost unless DK uses a local model; keep local inference optional and hardware-aware.
+Recommended DK free/local target
+□ Video/audio format conversion via local engine.
+□ Batch queue, presets and hardware-encode selection.
+□ Compression by target size/quality.
+□ Audio extraction and channel/sample-rate controls.
+□ Trim/crop/rotate without forcing a full editor.
+□ Subtitle SRT/VTT edit, timing shift, merge/split and burn-in.
+□ Local speech-to-text as optional downloadable model; clearly show model size/compute.
+□ Media metadata inspection/removal.
+□ No length/file-count watermark limits.
+Implementation cautions
+! Respect codec/patent/licence obligations; avoid bundling codecs without checking distribution terms.
+
+Screenshot / Annotation
+DK module goal. Fast, local screen capture and documentation workflow with no cloud account.
+Natural suite links: Image Toolkit; OCR; PDF
+Screenpresso Pro
+	Gate
+	Price/model
+	Source
+
+	Useful Free edition → one-time Pro
+	One-time per-user purchase
+	Screenpresso pricing
+
+
+Premium / gated feature inventory
+• HD/4K video capture including system sound and HDR screens (free video is branded).
+• Automatic speech-to-text subtitle generation.
+• OCR text capture from images.
+• Android device capture.
+• Color Picker.
+• Full image editor including rework, effects and watermarking (Free editor is limited).
+• AI image generation/editing feature set.
+• Document generator.
+• Video clipping/merge.
+• Multiple workspaces.
+• Unbranded/full sharing features.
+• Automatic blur of sensitive data in images/video.
+• Priority support and enterprise policy controls.
+Snagit / Snagit Create / Pro
+	Gate
+	Price/model
+	Source
+
+	Paid subscription product; higher paid bundles
+	Annual plans; current individual plan structure
+	TechSmith Snagit plans/features
+
+
+Premium / gated feature inventory
+• Scrolling capture beyond the visible screen.
+• Screenshot and screen recording toolset.
+• Simplify/SUI-style graphics and step-by-step documentation workflows.
+• Smart Move: recognize/rearrange/remove UI elements in screenshots.
+• OCR/text recognition and edit text inside captured/scanned images.
+• Capture presets, exact-area/size and advanced capture workflows.
+• Video/cursor/webcam/PiP/drawing/trim/GIF/frame extraction features across the paid app.
+• Searchable/taggable capture library.
+• Snagit Create adds 100M+ premium images, exclusive templates and AI-generated visuals.
+• Snagit Pro adds unlimited Screencast sharing/collaboration over the Create tier.
+Free baseline / competitive reality
+• ShareX is an excellent free/open-source capture/automation baseline, but its UX is power-user oriented. A polished, privacy-first local editor can still be attractive.
+Recommended DK free/local target
+□ Region/window/fullscreen capture and scrolling capture.
+□ Screen recording with system/mic audio, cursor options and simple trim.
+□ Annotation: arrows, text, shapes, blur/pixelate, step numbers, crop, highlight.
+□ OCR text extraction.
+□ Automatic local sensitive-data redaction suggestions with user confirmation.
+□ Capture history/library with tags and folders.
+□ Copy/save/export to standard formats; no mandatory cloud share.
+□ Optional handoff to DK Image/PDF/OCR modules.
+Implementation cautions
+! Automated redaction is a safety feature only if the user can verify the result; never claim it guarantees removal of all sensitive data.
+
+OCR
+DK module goal. Turn local images/scans into searchable/selectable text and searchable PDFs.
+Natural suite links: PDF; Screenshot; Android Scanner
+ABBYY FineReader PDF Standard / Corporate
+	Gate
+	Price/model
+	Source
+
+	Subscription
+	$99/year Standard; $165/year Corporate at research date
+	ABBYY pricing
+
+
+Premium / gated feature inventory
+• OCR/digitization of paper documents and scans (part of paid Standard).
+• Edit/protect/collaborate on PDFs.
+• Create/convert PDFs.
+• Corporate: automated digitization/conversion routines via Hot Folder, up to 5,000 pages/month on specified allowance.
+• Corporate: compare documents across different formats/scans.
+PDF-XChange Editor Plus
+	Gate
+	Price/model
+	Source
+
+	Enhanced OCR / forms in paid Plus
+	Perpetual licence model
+	PDF-XChange product page
+
+
+Premium / gated feature inventory
+• Enhanced OCR beyond the time-limited/free evaluation behaviour.
+• Form creation/editing and form recognition.
+• Other licensed PDF operations may watermark output without a licence.
+Adobe Acrobat Pro
+	Gate
+	Price/model
+	Source
+
+	Subscription
+	Pro subscription
+	Adobe Acrobat compare
+
+
+Premium / gated feature inventory
+• Convert scanned documents into editable/searchable PDFs with OCR.
+• Advanced PDF editing/redaction/comparison surrounding the OCR workflow.
+Free baseline / competitive reality
+• Tesseract/OCRmyPDF-style open-source engines provide a free local baseline, though recognition/layout quality and language packs differ.
+Recommended DK free/local target
+□ Local OCR for screenshots/images/PDF pages.
+□ Language-pack manager stored locally.
+□ Deskew/rotate/denoise/contrast preprocessing.
+□ Searchable-PDF output preserving original page image.
+□ Plain text / hOCR/structured export where engine permits.
+□ Batch queue with no page quota.
+□ User-selectable performance/accuracy models and CPU/GPU indication.
+Implementation cautions
+! OCR quality varies heavily by document type/language. Expose confidence and never silently alter source files.
+
+
+
+What this means for DK’s Desktop
+The best DK requirement is not “copy every premium product.” It is to expose the useful local capability without arbitrary quotas, cloud accounts or entitlement checks, while retaining conservative safety boundaries for hardware, drivers and automation.
+• Prefer one shared engine per technical domain (sensor service, input service, LAN pairing, macro engine) so multiple modules do not duplicate privileged background services.
+• If an excellent free/open-source product already dominates the category, differentiate through integration, simpler UX and verifiable local-only behaviour rather than claiming the feature itself is novel.
+• For all risky actions—drivers, fan control, process rules, disk operations—show exactly what will change and provide an explicit revert path.
+
+
+Sources
+Official product, pricing, licensing and support pages were prioritised. Links below are the pages used for this snapshot.
+1. Adobe Acrobat Standard / Pro — https://www.adobe.com/uk/acrobat/pricing/compare-versions.html
+2. PDF-XChange Editor / Editor Plus — https://www.pdf-xchange.com/product/pdf-xchange-editor/demo-limitations
+3. PhotoScape X Pro — https://x.photoscape.org/
+4. FastStone Image Viewer / Photo Resizer commercial licence — https://www.faststone.org/order.htm
+5. Wondershare UniConverter — https://videoconverter.wondershare.com/
+6. Movavi Video Converter — https://www.movavi.com/support/help-me-to-choose.html
+7. Screenpresso Pro — https://www.screenpresso.com/pricing/
+8. Snagit / Snagit Create / Pro — https://www.techsmith.com/snagit/
+9. ABBYY FineReader PDF Standard / Corporate — https://pdf.abbyy.com/pricing/
+10. PDF-XChange Editor Plus — https://www.pdf-xchange.com/product/downloads/pdf-xchange-editor
+Research snapshot: 16 September 2026  •  Official sources prioritised  •  Pricing/features can change

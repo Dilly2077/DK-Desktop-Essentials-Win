@@ -1,0 +1,178 @@
+DK DESKTOP ESSENTIALS — PROJECT SOURCE TRANSCRIPTION
+Original project attachment: 00_Master_Premium_Feature_Index(1).docx
+Format: plain-text extraction for Codex; source tables/typography may be flattened.
+Do not confuse planned targets with implemented functionality.
+
+00 Master Premium Feature Index
+
+DK'S DESKTOP ESSENTIALS  /  COMPETITIVE PAYWALL AUDIT
+	00
+Desktop Essentials — Master Premium Feature Index
+Cross-category requirements map for the DK’s Desktop suite
+
+
+
+Purpose
+A product-requirements audit of features that current public competitors restrict to paid editions, subscriptions, DLC, or post-trial licences. The aim is to identify features DK’s Desktop can make available locally and free, while avoiding needless duplication of already excellent free/open-source tools.
+Scope note: “Complete” here means all premium-gated features explicitly surfaced by the official pricing/comparison/help pages reviewed for the named competitors. It is not a claim that every software product in the market or every historical feature flag has been enumerated.
+Research cut: 16 September 2026. Prices are snapshots and should be rechecked before implementation or publication.
+
+
+How to read this audit
+	Label
+	Meaning
+
+	PAYWALLED
+	Feature exists in a paid tier, DLC, licence, or only after purchasing the product.
+
+	LIMITED FREE
+	The free edition exposes the feature with a cap, time limit or restricted mode.
+
+	FREE BASELINE
+	A strong free/open-source competitor already offers this capability; DK needs integration/UX/privacy differentiation.
+
+	DK TARGET
+	Feature is a plausible requirement for DK’s free/local implementation; not a promise that implementation is trivial.
+
+	CAUTION
+	Feature may require privileged drivers, third-party codecs, vendor SDKs, licensed databases, or other constraints.
+
+
+
+Suite map
+Controllers & Gaming Input
+• Controller Hub / remapping — Strong - integration + no account/licence. Premium examples: reWASD Advanced; DSX+. Free baseline: Steam Input; DS4Windows / AntiMicroX.
+• Controller diagnostics — Strong if unified with remapper. Premium examples: DSX+/specialist tools. Free baseline: Gamepad Tester-style tools.
+• Controller → KB/mouse — Medium - free baseline is strong. Premium examples: reWASD; Controller Companion. Free baseline: AntiMicroX.
+• Automatic game profiles — Strong inside one controller stack. Premium examples: reWASD autodetect / profile layers. Free baseline: Partial in free tools.
+• Game Save Manager — Medium - free baseline already excellent. Premium examples: Few meaningful consumer paywalls. Free baseline: GameSave Manager.
+• Game Library Aggregator — Medium - Playnite is formidable. Premium examples: LaunchBox Premium / Big Box. Free baseline: Playnite.
+• FPS / System Overlay — Strong when tied to DK hardware profiles. Premium examples: FPS Monitor; HWiNFO Pro OSD limits. Free baseline: RTSS / MSI Afterburner ecosystem.
+Hardware, Performance & Appearance
+• Hardware Monitor — Strong - shared sensor service. Premium examples: HWiNFO Pro; AIDA64. Free baseline: Libre Hardware Monitor; HWiNFO personal.
+• Fan Control — Medium - integration is the differentiator. Premium examples: SignalRGB Pro; Argus Monitor. Free baseline: Fan Control (free).
+• RGB / ScreenSync — Strong only as part of one control centre. Premium examples: SignalRGB Pro. Free baseline: OpenRGB.
+• Performance / Power Profiles — Strong - automatic cross-module profiles. Premium examples: Process Lasso Pro; ParkControl Pro. Free baseline: Windows power plans / free Process Lasso core.
+• Startup / Process Tools — Medium - avoid “optimizer” gimmicks. Premium examples: Process Lasso Pro; CCleaner Pro. Free baseline: Task Manager / Autoruns.
+Drivers & System Maintenance
+• DK's Drivers — Very strong - provenance + trust. Premium examples: Driver Easy Pro; Avast Driver Updater; CCleaner Pro. Free baseline: Windows Update / OEM tools.
+• Driver Confidence Ranking — Very strong - transparency is unique. Premium examples: Commercial updaters obscure ranking logic. Free baseline: Windows PnP rank is built in.
+• System Information Export — Strong as shared service. Premium examples: AIDA64 / HWiNFO automation gates. Free baseline: Windows msinfo32 / free HWiNFO.
+• Disk / Storage Tools — Strong if conservative and local. Premium examples: TreeSize Personal/Pro; Hard Disk Sentinel Pro. Free baseline: WizTree-style/free tools vary.
+Network & Device Bridge
+• Home Network Dashboard — Strong - local continuous history. Premium examples: Fing Premium; GlassWire Premium. Free baseline: Advanced IP Scanner / WiFiman basics.
+• Wake-on-LAN / Remote Actions — Medium inside Device Bridge. Premium examples: Unified Remote Full. Free baseline: Many free WOL tools.
+• LAN File Transfer / Clipboard — Medium - local free baseline strong. Premium examples: AirDroid premium remote features; Synergy Plus. Free baseline: LocalSend / KDE Connect.
+• Phone Remote / Macro Deck — Strong if one DK companion. Premium examples: Unified Remote Full; Stream Deck Mobile Pro. Free baseline: Macro Deck / KDE Connect.
+• Phone as Webcam — Medium - Pro gates are clear. Premium examples: DroidCam Pro. Free baseline: Some OS/vendor webcam modes.
+• Local Screen / Control Streaming — Medium - only if LAN-only simplicity wins. Premium examples: Splashtop / TeamViewer tiers. Free baseline: Sunshine/Moonlight for gaming.
+Files, Media & Creator Tools
+• PDF Toolkit — Strong - local/no upload. Premium examples: Adobe Acrobat; PDF-XChange licensed features. Free baseline: PDFsam/basic open tools.
+• Image Toolkit — Medium - free baseline strong. Premium examples: PhotoScape X Pro / paid utilities. Free baseline: FastStone personal; XnConvert/ImageMagick.
+• Audio / Video Converter — Medium - UI/integration, not codec novelty. Premium examples: UniConverter; Movavi Video Converter. Free baseline: FFmpeg; HandBrake.
+• Subtitle Tools — Low-Medium - free baseline excellent. Premium examples: AI subtitle products / paid media suites. Free baseline: Subtitle Edit / Aegisub.
+• Screenshot / Annotation — Strong if polished + local. Premium examples: Snagit; Screenpresso Pro. Free baseline: ShareX.
+• OCR — Strong if accuracy/local pipeline is good. Premium examples: ABBYY FineReader; Acrobat Pro; PDF-XChange Plus. Free baseline: Tesseract / OCRmyPDF.
+Automation & Power-User Productivity
+• Macro Engine — Strong if visual + shared actions. Premium examples: Macro Recorder Pro/Enterprise; reWASD macros. Free baseline: AutoHotkey.
+• Macro Deck Desktop Service — Strong as suite bridge. Premium examples: Stream Deck Mobile Pro; Unified Remote Full. Free baseline: Macro Deck.
+• Quick Launcher / Command Palette — Medium - free baseline strong. Premium examples: Listary Pro. Free baseline: PowerToys Run/Command Palette.
+
+
+Highest-value premium features to make free
+Controller / gaming
+□ Advanced remapping, macros, shift layers, rapid-fire/toggle controls
+□ Virtual controller output and per-game automatic profiles
+□ Full-screen game-library modes/themes and presentation customisation
+□ Unlimited hardware overlay items and local logging
+Hardware
+□ Custom multi-point fan curves and unlimited fan profiles
+□ Custom monitoring dashboards/widgets/history
+□ Unlimited RGB/macros/effects and screen-reactive lighting
+□ Power-plan/process automation rules that remain reversible
+Drivers / maintenance
+□ One-click official-source driver search with transparent provenance ranking
+□ Backup/rollback/restore-point workflow
+□ Disk-space history, duplicate search and richer NTFS accounting
+□ Drive tests/alerts/thresholds — with conservative safety limits
+Network / bridge
+□ Continuous LAN monitoring and unlimited local event history
+□ New-device alerts and local inventory export
+□ Unlimited local macro/remote controls, custom layouts and screen viewer
+□ HD/UHD phone-webcam controls without resolution paywall
+Files / creator
+□ PDF edit/OCR/redaction/forms/conversion without watermark or upload
+□ Unlimited batch image/video conversion
+□ Scrolling capture, full annotation editor, OCR and document generation
+□ Batch OCR/searchable PDF without page quotas
+Automation
+□ Loops/repeats, scheduler, variables and image/OCR triggers
+□ Unlimited macro profiles/buttons/layouts
+□ Custom launcher filters/actions and network-drive indexing
+
+
+Modules where “free” is not enough
+• Game saves: GameSave Manager already follows a donation-funded, no-telemetry, completely-free philosophy.
+• Game library: Playnite is free/open source with no paid upgrades or feature restrictions.
+• RGB: OpenRGB already provides broad free/open cross-brand RGB control.
+• Fan control: Fan Control provides sophisticated free fan curves.
+• LAN transfer: LocalSend already offers direct local transfer with no account/ads/trackers.
+• Controller-to-keyboard/mouse: AntiMicroX is free/open source.
+• Video conversion/subtitles: FFmpeg, HandBrake and Subtitle Edit make the raw engine/functionality free already.
+• Quick launch/search: PowerToys, Everything and Listary Free create a strong free baseline.
+In these categories the DK advantage has to be: one cohesive suite, better defaults, shared profiles, verifiable local-only architecture, no account/licence dependency, and lower operational friction.
+Recommended suite combinations
+	Combined surface
+	Modules
+	Why it strengthens DK
+
+	PC Control Centre
+	Hardware Monitor + Fan Control + RGB/ScreenSync + Performance Profiles + FPS Overlay
+	Very strong: one sensor service and one profile can coordinate the whole PC.
+
+	Controller Stack
+	Controller Hub + Diagnostics + Keyboard/Mouse + Game Profiles + Macro Engine
+	Very strong: avoid multiple low-level input services.
+
+	Device Bridge
+	Network Dashboard + WOL + File/Clipboard + Phone Remote/Macro Deck + optional Webcam
+	Strong: one pairing/security layer.
+
+	Media Stack
+	Image + Screenshot + OCR + PDF + Video/Audio + Subtitles
+	Strong as modular tools sharing import/export pipelines.
+
+	Driver & Diagnostics
+	Drivers + System Info + Hardware Inventory + restore/export
+	Very strong and distinctive if source trust is transparent.
+
+
+
+
+Documents in this audit set
+• 01_Controllers_and_Gaming_Input_Paywall_Audit.docx
+• 02_Hardware_Performance_and_Appearance_Paywall_Audit.docx
+• 03_Drivers_and_System_Maintenance_Paywall_Audit.docx
+• 04_Network_and_Device_Bridge_Paywall_Audit.docx
+• 05_Files_Media_and_Creator_Tools_Paywall_Audit.docx
+• 06_Automation_and_Power_User_Productivity_Paywall_Audit.docx
+Each category document contains the per-tool competitor paywall inventory, strong free baselines, a recommended DK free/local target checklist, implementation cautions, and source links.
+
+
+Sources
+Official product, pricing, licensing and support pages were prioritised. Links below are the pages used for this snapshot.
+1. reWASD Advanced — https://www.rewasd.com/advanced-controller-mapping
+2. LaunchBox Premium — https://www.launchbox-app.com/premium
+3. HWiNFO Licences — https://www.hwinfo.com/licenses/
+4. SignalRGB Pro — https://www.signalrgb.com/pro/
+5. Process Lasso Free vs Pro — https://bitsum.com/howfree/
+6. Driver Easy Pro — https://www.drivereasy.com/buy.php?comeid=NavBuyButton
+7. Fing Pricing — https://www.fing.com/pricing/
+8. GlassWire Pricing — https://www.glasswire.com/pricing/
+9. Unified Remote Features — https://www.unifiedremote.com/features
+10. Adobe Acrobat — https://www.adobe.com/uk/acrobat/pricing/compare-versions.html
+11. PDF-XChange — https://www.pdf-xchange.com/product/pdf-xchange-editor/demo-limitations
+12. Screenpresso Pricing — https://www.screenpresso.com/pricing/
+13. Macro Recorder Shop — https://www.macrorecorder.com/shop/
+14. Listary Pro — https://www.listary.com/pro
+Research snapshot: 16 September 2026  •  Official sources prioritised  •  Pricing/features can change
