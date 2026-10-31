@@ -131,15 +131,20 @@ export function makeManualOffer({ id, linkUrl, fileName, confirmedWarnings = fal
   return message;
 }
 export function validateBrowserMessage(input) {
+  let encoded;
+  try { encoded = JSON.stringify(input); }
+  catch { return { ok: false, reason: 'INVALID_ENVELOPE' }; }
   if (!input || typeof input !== 'object' || Array.isArray(input) ||
       input.protocolVersion !== BRIDGE_PROTOCOL_VERSION ||
       typeof input.id !== 'string' || !UUID_PATTERN.test(input.id) ||
-      JSON.stringify(input).length > MAX_MESSAGE_CHARS)
+      typeof encoded !== 'string' || encoded.length > MAX_MESSAGE_CHARS)
     return { ok: false, reason: 'INVALID_ENVELOPE' };
   if (Object.keys(input).some(key => !['protocolVersion', 'id', 'type', 'payload'].includes(key)))
     return { ok: false, reason: 'UNEXPECTED_FIELD' };
   if (input.type === 'bridge.hello') {
-    if (input.payload && Object.keys(input.payload).length)
+    if (input.payload !== undefined &&
+        (!input.payload || typeof input.payload !== 'object' ||
+         Array.isArray(input.payload) || Object.keys(input.payload).length))
       return { ok: false, reason: 'UNEXPECTED_PAYLOAD' };
     return { ok: true, type: 'bridge.hello' };
   }
