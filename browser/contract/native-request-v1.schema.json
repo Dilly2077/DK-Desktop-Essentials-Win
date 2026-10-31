@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dk-desktop-essentials.invalid/schemas/browser-native-request-v1.json",
+  "title": "DK Browser Native Messaging Request v1",
+  "description": "Design contract, NOT an installed native messaging host or extension. The receiving host must independently validate byte limits, caller identity, URL, redirects and filesystem effects.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocolVersion", "id", "type"],
+      "properties": {
+        "protocolVersion": { "const": 1 },
+        "id": { "$ref": "#/$defs/requestId" },
+        "type": { "const": "bridge.hello" },
+        "payload": { "type": "object", "maxProperties": 0 }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocolVersion", "id", "type", "payload"],
+      "properties": {
+        "protocolVersion": { "const": 1 },
+        "id": { "$ref": "#/$defs/requestId" },
+        "type": { "const": "download.offer" },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["url", "trigger"],
+          "properties": {
+            "url": { "type": "string", "minLength": 1, "maxLength": 8192, "description": "Explicit user-selected HTTP(S) URL only. Must not be included in responses or logs." },
+            "trigger": { "const": "context_menu_link" },
+            "suggestedFileName": { "type": "string", "minLength": 1, "maxLength": 160 }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "requestId": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    }
+  }
+}
