@@ -172,3 +172,18 @@ test('oversized or invalid link input is refused',()=>{
 test('unknown triggers do not initiate transfers',()=>{
   assert.equal(evaluateCapture(e({trigger:'page_script'})).reason,'UNSUPPORTED_TRIGGER');
 });
+
+test('bad or cyclic envelopes fail closed without throwing', () => {
+  const cyclic = {protocolVersion:1,id:ID,type:'bridge.hello'};
+  cyclic.self=cyclic;
+  assert.equal(validateBrowserMessage(cyclic).ok,false);
+  assert.equal(validateBrowserMessage({protocolVersion:1,id:ID,type:'bridge.hello',payload:[]}).ok,false);
+  assert.equal(validateBrowserMessage({protocolVersion:1,id:ID,type:'bridge.hello',payload:null}).ok,false);
+  assert.equal(validateBrowserMessage({protocolVersion:1,id:ID,type:'bridge.hello',payload:''}).ok,false);
+});
+
+test('insecure and local manual links require explicit extra acknowledgement',()=>{
+  assert.throws(()=>makeManualOffer({id:ID,linkUrl:'http://public.example/x'}));
+  assert.throws(()=>makeManualOffer({id:ID,linkUrl:'https://127.0.0.1/x'}));
+  assert.equal(makeManualOffer({id:ID,linkUrl:'http://public.example/x',confirmedWarnings:true}).type,'download.offer');
+});
