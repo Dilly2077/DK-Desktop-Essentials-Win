@@ -31,7 +31,7 @@ function parseHttpUrl(input) {
 }
 function safeOrigin(input) {
   const url = parseHttpUrl(input);
-  if (!url || url.pathname !== '/' || url.search || url.hash || /[\\*\\s]/.test(url.hostname)) return null;
+  if (!url || url.pathname !== '/' || url.search || url.hash || /[*\s]/.test(url.hostname)) return null;
   return url.origin;
 }
 function isLocalAddress(hostname) {
