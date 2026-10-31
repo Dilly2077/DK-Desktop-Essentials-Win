@@ -103,7 +103,12 @@ public sealed record ControllerDeviceDescriptor(
     bool SupportsStandardGamepad,
     int ButtonCount,
     int AxisCount,
-    int SwitchCount);
+    int SwitchCount)
+{
+    public string InputBackend { get; init; } = "windows-gaming-input";
+    public bool SupportsVirtualOutput { get; init; } = true;
+    public string ConnectionType { get; init; } = "unspecified";
+}
 
 public sealed class ControllerDeviceEventArgs : EventArgs
 {

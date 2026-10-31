@@ -19,6 +19,8 @@ public sealed partial class ControllerHubService
                 ?? throw new InvalidOperationException("The selected controller is not connected.");
             var profile = await _profileStore.LoadAsync(profileId, cancellationToken)
                 ?? throw new InvalidOperationException("The selected profile does not exist.");
+            if (!device.SupportsVirtualOutput)
+                throw new InvalidOperationException("Windows joystick fallback supports raw inspection only; virtual output requires a provider with stable physical identity.");
             if (!profile.DeviceMatch.Matches(device))
                 throw new InvalidOperationException("The profile is not compatible with this controller.");
             if (profile.OutputMode is not ControllerOutputMode.VirtualXbox360 and not ControllerOutputMode.VirtualDualShock4)

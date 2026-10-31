@@ -7,6 +7,7 @@ public sealed class WindowsGamingInputControllerProvider : IControllerProvider
     private readonly object _gate = new();
     private readonly Dictionary<string, RawGameController> _controllers = new(StringComparer.Ordinal);
     private bool _disposed;
+    private readonly WindowsJoystickFallback _fallback = new();
 
     public WindowsGamingInputControllerProvider()
     {
@@ -23,6 +24,13 @@ public sealed class WindowsGamingInputControllerProvider : IControllerProvider
     {
         lock (_gate)
         {
+            if (_disposed) return Array.Empty<ControllerDeviceDescriptor>();
+            // WGI enumerates asynchronously. Reconcile its current list as well
+            // as listening for events, including after an initially empty list.
+            foreach (var controller in RawGameController.RawGameControllers)
+                TrackController(controller, raiseEvent: false);
+            if (_controllers.Count == 0) return _fallback.GetDevices();
+            _fallback.Reset();
             return _controllers.Values
                 .Select(CreateDescriptor)
                 .OrderBy(x => x.DisplayName, StringComparer.OrdinalIgnoreCase)
@@ -38,6 +46,9 @@ public sealed class WindowsGamingInputControllerProvider : IControllerProvider
 
         lock (_gate)
         {
+            if (_disposed) return false;
+            if (deviceId.StartsWith("winmm:", StringComparison.Ordinal))
+                return _controllers.Count == 0 && _fallback.TryRead(deviceId, out snapshot);
             if (!_controllers.TryGetValue(deviceId, out controller))
                 return false;
         }
@@ -180,6 +191,9 @@ public sealed class WindowsGamingInputControllerProvider : IControllerProvider
         RawGameController.RawGameControllerRemoved -= OnControllerRemoved;
 
         lock (_gate)
+        {
             _controllers.Clear();
+            _fallback.Reset();
+        }
     }
 }

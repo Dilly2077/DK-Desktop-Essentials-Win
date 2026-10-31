@@ -89,6 +89,9 @@ public sealed partial class ControllerHubService : IAsyncDisposable
             if (profile.OutputMode is ControllerOutputMode.None or ControllerOutputMode.PassThroughOnly)
                 return true;
 
+            if (_provider.GetConnectedDevices().SingleOrDefault(device => device.DeviceId == deviceId)?.SupportsVirtualOutput != true)
+                throw new InvalidOperationException("This input backend supports inspection only, without virtual output.");
+
             if (!_outputSink.IsAvailable)
                 return false;
 
