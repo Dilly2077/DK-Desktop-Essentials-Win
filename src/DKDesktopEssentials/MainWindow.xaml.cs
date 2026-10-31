@@ -44,6 +44,18 @@ public partial class MainWindow : Window
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
+        // At high scaling the requested minimum can exceed the available desktop.
+        // Fit and center the window so the title bar and controls remain reachable.
+        var workArea = SystemParameters.WorkArea;
+        if (workArea.Width > 0 && workArea.Height > 0)
+        {
+            MinWidth = Math.Min(MinWidth, workArea.Width);
+            MinHeight = Math.Min(MinHeight, workArea.Height);
+            Width = Math.Min(Width, workArea.Width);
+            Height = Math.Min(Height, workArea.Height);
+            Left = workArea.Left + (workArea.Width - Width) / 2;
+            Top = workArea.Top + (workArea.Height - Height) / 2;
+        }
         try
         {
             var userDataFolder = _webViewDataFolder ?? Path.Combine(

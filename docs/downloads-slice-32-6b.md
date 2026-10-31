@@ -250,6 +250,14 @@ the captured desktop; this needs investigation and is not a full 150% pass.
 The original 100% Windows setting was restored. The 200% and spoken-reader
 checks are still outstanding.
 
+Follow-up: the WPF startup window now fits and centers within the available
+Windows work area, reducing its minimum dimensions if the desktop is smaller.
+After a local Release rebuild, a fresh 150% launch reported DPI 1.5 and displayed
+the title bar, download list and new-download dialog within the desktop. Windows
+scaling was restored to 100%. This verifies these specific 150% views; the full
+resize sweep, 200% scaling and spoken-reader checks remain outstanding. The
+managed Controller Hub regression suite passed 36/36 after the shared-host change.
+
 Native integration has no known failing automated test or unhandled defect in the
 exercised scenarios. The complete manual matrix is **not signed off**. Finish the
 remaining width/resize, 150%/200% and spoken-reader checks on a local interactive
