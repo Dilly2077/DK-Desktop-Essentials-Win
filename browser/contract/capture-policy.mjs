@@ -31,7 +31,7 @@ function parseHttpUrl(input) {
 }
 function safeOrigin(input) {
   const url = parseHttpUrl(input);
-  if (!url || url.pathname !== '/' || url.search || url.hash) return null;
+  if (!url || url.pathname !== '/' || url.search || url.hash || /[\\*\\s]/.test(url.hostname)) return null;
   return url.origin;
 }
 function isLocalAddress(hostname) {
@@ -113,10 +113,12 @@ function suggestedFileName(input) {
   const cleaned = input.replace(/[\\/:*?"<>|\x00-\x1f]/g, '_').replace(/[. ]+$/g, '').slice(0, 160);
   return cleaned || undefined;
 }
-export function makeManualOffer({ id, linkUrl, fileName } = {}) {
+export function makeManualOffer({ id, linkUrl, fileName, confirmedWarnings = false } = {}) {
   if (!UUID_PATTERN.test(String(id || ''))) throw new TypeError('Invalid request identifier');
   const result = classifyDownloadUrl(linkUrl);
   if (!result.ok) throw new TypeError('Unsupported download link');
+  if ((result.insecureHttp || result.potentiallyLocal) && confirmedWarnings !== true)
+    throw new TypeError('An explicit additional warning acknowledgement is required');
   // Query string may contain a bearer token; only pass in the explicit user action.
   // A fragment is never sent to the HTTP server and may expose client-side secrets.
   const url = new URL(linkUrl);
@@ -134,6 +136,8 @@ export function validateBrowserMessage(input) {
       typeof input.id !== 'string' || !UUID_PATTERN.test(input.id) ||
       JSON.stringify(input).length > MAX_MESSAGE_CHARS)
     return { ok: false, reason: 'INVALID_ENVELOPE' };
+  if (Object.keys(input).some(key => !['protocolVersion', 'id', 'type', 'payload'].includes(key)))
+    return { ok: false, reason: 'UNEXPECTED_FIELD' };
   if (input.type === 'bridge.hello') {
     if (input.payload && Object.keys(input.payload).length)
       return { ok: false, reason: 'UNEXPECTED_PAYLOAD' };
@@ -144,6 +148,7 @@ export function validateBrowserMessage(input) {
     if (!p || typeof p !== 'object' || Array.isArray(p) ||
         p.trigger !== 'context_menu_link' ||
         typeof p.url !== 'string' || !classifyDownloadUrl(p.url).ok ||
+        new URL(p.url).hash !== '' ||
         (p.suggestedFileName !== undefined &&
          (typeof p.suggestedFileName !== 'string' ||
           suggestedFileName(p.suggestedFileName) !== p.suggestedFileName)))
